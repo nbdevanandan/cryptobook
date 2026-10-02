@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="main-content" id="main" tabindex="-1">
+  {% if section.title %}<h1>{{ section.title }}</h1>{% endif %}
+  {% include "partials/admonitions.html" %}
+</main>
+{% endblock content %}

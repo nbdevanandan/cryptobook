@@ -1,0 +1,6 @@
+// Print stylesheet: compiled by Zola to print.css (every non-partial scss
+// file becomes its own output). Loaded with media="print" so it never
+// blocks first paint; it still comes AFTER book.css in <head> so its rules
+// win same-specificity ties at print time (was: @import last in book.scss).
+@import "variables";
+@import "print-rules";

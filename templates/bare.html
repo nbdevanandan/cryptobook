@@ -1,0 +1,7 @@
+{# Chromeless layout: login/offline blank sidebar+topbar+TOC (note titles must
+   not leak to unauthenticated viewers). Extends base, blanks the three
+   chrome blocks in one place so a future block can't leak by omission. #}
+{% extends "base.html" %}
+{% block sidebar %}{% endblock sidebar %}
+{% block topbar %}{% endblock topbar %}
+{% block tocside %}{% endblock tocside %}

@@ -1,0 +1,65 @@
+{# Math head block (page.extra vs section.extra). Dual mode:
+   - Default (no env): client MathJax bundle (pinned LKG) so `zola serve`
+     and plain `zola build` render math with zero setup (authoring path).
+   - Prod (`SSR=true` in the build environment): no bundle/config — math
+   comes from scripts/ssr-math.mjs static CHTML (§5). Set SSR=true as a
+   Cloudflare Pages build variable (Production + Preview) and prefix any
+   local prod-faithful build. The ex.math gate is kept so math-less pages
+   (graph/chapters/login/offline, math=false) stay byte-identical and the
+   SSR script can skip them.
+   `skipHtmlTags` includes `code` to match the SSR defaults: code spans are
+   literal by contract (copy button copies them verbatim), so neither mode
+   may typeset inside <code>. #}
+{% if page %}{% set ex = page.extra %}{% else %}{% set ex = section.extra %}{% endif %}
+{# Preload the tiny always-used NewCM faces (zero/brk/lo, ~12KB total) so the
+   vertical-metrics swap that shifts math paragraphs never happens late.
+   Absolute CDN URLs on purpose; crossorigin + byte-exact hrefs. The hrefs
+   MUST match whoever consumes them or Chrome double-fetches: the SSR branch
+   below uses the unversioned path (byte-matches @font-face src in the shared
+   math-chtml.css), while the bundle branch uses the @4.1.3-versioned path
+   (byte-matches the bundle's own fontURL — the unversioned preloads were
+   fetched AND discarded there). The 94KB mjx-ncm-n.woff2 is preloaded ONLY
+   on the bundle branch (fetchpriority low so it never contends LCP text):
+   prod covers its horizontal mismatch with size-adjust + optional instead,
+   but the bundle injects neither, so dev CLS (measured 0.23-0.27 on math
+   notes) needs the glyphs before typeset. Keep the @4.1.3 segments in sync
+   with the bundle pin below. Gated on math like the bundle. #}
+{% if ex.math | default(value=config.extra.mathjax) %}
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+{% if get_env(name="SSR", default="") == "true" %}
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font/chtml/woff2/mjx-ncm-zero.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font/chtml/woff2/mjx-ncm-brk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font/chtml/woff2/mjx-ncm-lo.woff2" as="font" type="font/woff2" crossorigin>
+{% else %}
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-zero.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-brk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-lo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-n.woff2" as="font" type="font/woff2" crossorigin>
+{% endif %}
+{% endif %}
+{% if ex.math | default(value=config.extra.mathjax) %}
+{% if get_env(name="SSR", default="") == "true" %}
+<!-- math-ssr: CHTML pre-rendered by scripts/ssr-math.mjs -->
+{% else %}
+{# assistive-mml is deliberately NOT in the initial load: measured that
+   `MathJax.loader.load('a11y/assistive-mml')` costs ~800ms main-thread
+   scripting plus ~190KB (speech-worker + mathmaps) while post-startup
+   `loader.load` resolves yet attaches zero MathML even with a re-typeset,
+   so it can never be facade-deferred either — and dev needs neither form.
+   Onboard output stays screen-reader usable: every formula carries
+   role="math" + aria-label (speech text) + data-semantic-* enrichment and
+   real glyph text, which is exactly the a11y story prod SSR ships (prod
+   strips data-mathml and serves no explorer). Dev/prod parity, zero
+   MathML in both, ~0.10 lab points recovered. Revisit only with an
+   upstream lightweight speech path. #}
+<script>MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']],processEscapes:true,processEnvironments:true,tags:'ams'},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer fetchpriority="low" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js"></script>
+{% endif %}
+{% endif %}
+{% if ex.tikz | default(value=false) %}
+{% if get_env(name="SSR", default="") != "true" %}
+<link rel="preconnect" href="https://tikzjax.com">
+<link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css">
+<script defer src="https://tikzjax.com/v1/tikzjax.js"></script>
+{% endif %}
+{% endif %}

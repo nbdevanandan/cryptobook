@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="main-content" id="main" tabindex="-1">
+  {% set crumbs_ancestors = section.ancestors %}{% set crumbs_title = section.title %}{% include "partials/crumbs.html" %}
+  <h1>{{ section.title }}</h1>
+  {% include "partials/admonitions.html" %}
+  {% if not section.pages and not section.subsections %}<p class="empty-note">No notes in this chapter yet.</p>{% endif %}
+  {% if section.pages %}
+  {% set pages = section.pages %}{% include "partials/note_list.html" %}
+  {% endif %}
+  {% if section.subsections %}
+  <ul class="section-pages">
+    {% for sub_path in section.subsections %}
+    {% set sub = get_section(path=sub_path) %}
+    <li>{{ <kb.page_link url={<kb.rel url={sub.permalink} base={config.base_url} rp={rp} />} text={sub.title or sub.path} /> }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</main>
+{% endblock content %}

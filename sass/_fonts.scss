@@ -1,0 +1,55 @@
+/* STIX Two Text (self-hosted, latin subset). Sturdier screen serif for body
+   prose; variable wght 400-700 so <strong> interpolates, no separate bold file.
+   size-adjust per face, calibrated headlessly against real site prose in the
+   Georgia fallback (body line-height is a fixed 1.55 multiple, so only
+   horizontal advance mismatch can reflow — the swap itself then lands
+   seamlessly and swap is kept, unlike the NewCM faces which need optional;
+   recalibrate if the prose mix or fallback stack changes). */
+@font-face {
+  font-family: "STIX Two Text";
+  src: url("fonts/stix-two-regular.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 96.1%;
+}
+@font-face {
+  font-family: "STIX Two Text";
+  src: url("fonts/stix-two-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  size-adjust: 99.6%;
+}
+/* Bold italic was synthesized from the 400 italic (visibly inferior stroke
+   widening); dedicated 700 face closes the single faux-bold case. */
+@font-face {
+  font-family: "STIX Two Text";
+  src: url("fonts/stix-two-bold-italic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+  size-adjust: 93.4%;
+}
+/* Source Sans 3 (self-hosted, latin subset) — sans body option toggled via
+   html[data-font="sans"]. STIX Two's math sans glyphs derive from Source Sans,
+   so prose numerals match \mathsf voice; large x-height aids screens. */
+@font-face {
+  font-family: "Source Sans 3";
+  src: url("fonts/source-sans-3-regular.woff2") format("woff2");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Source Sans 3";
+  src: url("fonts/source-sans-3-bold.woff2") format("woff2");
+  font-weight: 600 800;
+  font-style: normal;
+  font-display: swap;
+}
+/* UI/headings voice is Source Sans 3 (its @font-face blocks above double as
+   the --font-ui faces — no separate files). Latin Modern Sans retired: x-height
+   0.444 with thin CM hairlines and weak hinting made it the worst screen face
+   in the stack, and Source Sans (0.486+, STIX-math-sans-derived) keeps the
+   textbook voice while fixing small-size legibility. */

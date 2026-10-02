@@ -1,0 +1,23 @@
+/* Vendored giallo palettes (github-light/dark), scoped per theme so code
+   colors transition with the theme switch. Source: zola build output
+   (public/giallo-*.css); re-merge here if highlighting config changes.
+   Contrast repairs in _syntax.scss (imported after) still win. */
+html:not([data-theme="dark"]) .z-l-code { color: #24292E; }
+html:not([data-theme="dark"]) .z-l-1 { color: #005CC5; }
+html:not([data-theme="dark"]) .z-l-2 { color: #032F62; }
+html:not([data-theme="dark"]) .z-l-4 { color: #586069; }
+html:not([data-theme="dark"]) .z-l-6 { color: #6F42C1; }
+html:not([data-theme="dark"]) .z-l-7 { color: #B31D28; }
+.z-l-b { font-weight: bold; }
+.z-l-i { font-style: italic; }
+.z-l-u { text-decoration: underline; }
+.z-l-s { text-decoration: line-through; }
+.z-l-us { text-decoration: underline line-through; }
+html[data-theme="dark"] .z-d-code { color: #E1E4E8; }
+html[data-theme="dark"] .z-d-4 { color: #79B8FF; }
+html[data-theme="dark"] .z-d-5 { color: #85E89D; }
+html[data-theme="dark"] .z-d-6 { color: #9ECBFF; }
+html[data-theme="dark"] .z-d-8 { color: #D1D5DA; }
+html[data-theme="dark"] .z-d-9 { color: #DBEDFF; }
+html[data-theme="dark"] .z-d-11 { color: #FDAEB7; }
+html[data-theme="dark"] .z-d-12 { color: #FFAB70; }

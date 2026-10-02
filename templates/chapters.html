@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="main-content" id="main" tabindex="-1">
+  <h1>{{ page.title }}</h1>
+  {# Raw content on purpose: chapter listings never use callout syntax, so
+     they bypass the admonitions rewrite (see section.html vs page.html). #}
+  {{ page.content | replace(from=config.base_url ~ "/", to=rp) | safe }}
+  {% set root = get_section(path="_index.md") %}
+  <div class="chapters">
+    {% if not root.subsections %}<p class="empty-note">No chapters yet.</p>{% endif %}
+    {% for sp in root.subsections %}
+    {% set s = get_section(path=sp) %}
+    <article class="chapter-card" aria-labelledby="ch-{{ loop.index }}">
+      <h2 id="ch-{{ loop.index }}">{{ <kb.page_link url={<kb.rel url={s.permalink} base={config.base_url} rp={rp} />} text={s.title or s.path} /> }}<a class="h-anchor" href="#ch-{{ loop.index }}" aria-label="Permalink to {{ s.title or s.path }}">§</a></h2>
+      {% if s.description %}<p>{{ s.description }}</p>{% endif %}
+      <p class="backlink-kind">{{ s.pages | length }} note{% if s.pages | length != 1 %}s{% endif %}</p>
+      {% if s.pages %}
+      {% set pages = s.pages %}{% include "partials/note_list.html" %}
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</main>
+{% endblock content %}

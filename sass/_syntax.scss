@@ -1,0 +1,37 @@
+/* structural CSS for Zola/Giallo class-mode highlighting (palettes vendored in _giallo.scss) */
+.giallo-l { display: block; width: max-content; min-width: 100%; min-height: 1.5em; min-height: 1lh; }
+/* short highlighted lines must also span the full scroll width when a longer
+   line forces horizontal scrolling: code becomes the sizing block (widest
+   line), so .giallo-l min-width:100% resolves against the overflow width */
+.main-content pre > code { display: block; width: max-content; min-width: 100%; }
+/* line numbers: solid colors only, never opacity (axe blends opacity and fails them) */
+.giallo-ln { display: inline-block; user-select: none; margin-right: 0.4em; padding: 0 0.4em; min-width: 3ch; text-align: right; }
+
+/* Contrast repairs: giallo's stock palettes were tuned for pure white / near-black
+   backdrops, not our warm --code-bg. Tokens below measured < 4.5:1 and are pinned
+   back to AA. Scoped per theme (both z-l-* and z-d-* classes sit on one <pre>). */
+html:not([data-theme="dark"]) {
+  .z-l-3 { color: #176f2c; }   /* green 4.10 -> AA */
+  .z-l-5 { color: #57606a; }   /* gray 4.26 -> AA */
+  .z-l-8 { color: #b31d28; }   /* red 4.05 -> AA */
+  .z-l-9 { color: #8a4b00; }   /* orange 3.09 -> AA */
+  .z-l-10, .z-l-11 { color: #24292e; } /* near-white 1.0x -> AA */
+  .giallo-ln { color: #57606a; }
+}
+html[data-theme="dark"] {
+  .z-d-1 { color: #d1d5da; }   /* near-black 1.05 -> AA */
+  .z-d-2 { color: #b4bdc5; }   /* raised for the stronger hl bg */
+  .z-d-3 { color: #b3bcc5; }   /* gray 2.90 -> AA, hl-safe */
+  .z-d-7 { color: #c4b0f2; }   /* hl-safe violet */
+  .z-d-10 { color: #ffa4ac; }  /* hl-safe red */
+  .giallo-ln { color: #b3bcc5; } /* line numbers, solid AA on both code bgs */
+}
+
+/* highlighted lines (hl_lines annotation): Zola marks the line span with
+   z-l-hl / z-d-hl (already theme-scoped by the html[data-theme] selectors).
+   Backgrounds are SOLID per theme: translucent tints lighten dark-mode
+   code-bg enough to fail AA for light text (axe-verified), so the exact
+   solid equivalents live here. Every token below measures >= 4.5 against
+   both the plain and the highlighted bg in its theme. */
+html:not([data-theme="dark"]) .giallo-l.z-l-hl { background-color: #e6e9ee; }
+html[data-theme="dark"] .giallo-l.z-d-hl { background-color: #2a3138; }

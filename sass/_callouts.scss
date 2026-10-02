@@ -1,0 +1,117 @@
+/* LaTeX-style color-coded boxes. Shared by shortcodes + Obsidian-style quotes.
+   %card merges the skeleton into one selector list via @extend (a mixin
+   would re-emit these declarations at every site). */
+%card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card), var(--inset-hi);
+  padding: 0.7rem 1rem;
+  margin: 1.25rem 0;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+@mixin callout($bg, $bd) {
+  @extend %card;
+  background: $bg;
+  border-color: $bd;
+  border-inline-start: 0.35rem solid $bd;
+}
+.callout > p:first-child, .thm > p:first-child { margin-top: 0; }
+.callout > p:last-child, .thm > p:last-child { margin-bottom: 0; }
+.callout-title { font-family: var(--font-ui); font-weight: 700; display: block; margin-bottom: 0.3rem; }
+
+.callout-info { @include callout(var(--callout-info-bg), var(--callout-info-bd)); }
+.callout-info .callout-title { color: var(--callout-info); }
+.callout-info .callout-title::before { content: "Info"; }
+.callout-important { @include callout(var(--callout-important-bg), var(--callout-important-bd)); }
+.callout-important .callout-title { color: var(--callout-error); }
+.callout-important .callout-title::before { content: "Important"; }
+.callout-tip { @include callout(var(--callout-tip-bg), var(--callout-tip-bd)); }
+.callout-tip .callout-title { color: var(--callout-tip); }
+.callout-tip .callout-title::before { content: "Tip"; }
+.callout-warning { @include callout(var(--callout-warning-bg), var(--callout-warning-bd)); }
+.callout-warning .callout-title { color: var(--callout-warn); }
+.callout-warning .callout-title::before { content: "Warning"; }
+.callout-example { @include callout(var(--callout-example-bg), var(--callout-example-bd)); }
+.callout-example .callout-title { color: var(--callout-example); }
+.callout-example .callout-title::before { content: "Example"; }
+/* Gap between the ::before keyword and the title text lives here (not in the
+   markup): the kb.callout shortcode emits its title span with no surrounding
+   text node, so a source-space gap would only ever reach the admonition path.
+   The admonitions.html rewrite emits no trailing space for the same reason. */
+.callout .callout-title::before { margin-right: 0.35em; }
+
+/* Obsidian-style `> [!info]` quotes are rewritten build-side
+   (partials/admonitions.html) into <blockquote class="callout callout-info">,
+   so they share the same CSS. */
+
+/* theorem environments (auto-numbered per type via CSS counters; one @each
+   keeps all six kinds in sync — adding a 7th env is one word here) */
+.main-content { counter-reset: thm-definition thm-theorem thm-lemma thm-example thm-remark thm-notation; }
+.thm-num::before { font-variant-numeric: tabular-nums; }
+@each $k in definition, theorem, lemma, example, remark, notation {
+  .thm-#{$k} { counter-increment: thm-#{$k}; }
+  .thm-#{$k} .thm-num::before { content: counter(thm-#{$k}); }
+}
+/* box + heading permalinks share one reveal contract (every .h-anchor lives
+   inside h2-h4, so the bare class matches exactly the scoped set) */
+.thm-anchor, .h-anchor {
+  color: var(--muted); text-decoration: none; font-family: var(--font-ui);
+  font-weight: 400; margin-inline-start: 0.35rem; opacity: 0;
+}
+/* permalinks: hover-reveal on desktop, always visible on touch (no hover),
+   always visible to keyboard focus; details anchors also persist while open */
+.thm:hover .thm-anchor, .thm-details:hover .thm-anchor,
+.thm-details:focus-within .thm-anchor,
+.thm-anchor:focus-visible, .thm-anchor:focus { opacity: 1; }
+.thm-anchor:hover, .h-anchor:hover { color: var(--accent); }
+@media (hover: none), (pointer: coarse) {
+  .thm-anchor, h2 .h-anchor, h3 .h-anchor, h4 .h-anchor { opacity: 1; }
+}
+/* heading permalinks (h2-h4, build-side in admonitions.html): hover-reveal on
+   desktop (base contract above). Real links (unlike \eqref spans), so
+   Chromium annotates them as clickable internal links in printed PDFs with
+   no twin machinery. h1 excluded: the title's permalink is the page URL. */
+h2:hover .h-anchor, h3:hover .h-anchor, h4:hover .h-anchor,
+.h-anchor:focus-visible, .h-anchor:focus { opacity: 1; }
+/* anchor jumps land clear of the fixed topbar */
+.thm[id], .thm-details[id] { scroll-margin-top: var(--anchor-offset); }
+.thm[id]:target, .thm-details[id]:target,
+h2:target, h3:target, h4:target {
+  outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--radius-md);
+}
+.thm {
+  @extend %card;
+  background: var(--bg);
+  border-inline-start: 0.35rem solid var(--accent);
+}
+.thm:hover { transform: translateY(-1px); box-shadow: var(--shadow-raised), var(--inset-hi); }
+.thm-head { font-family: var(--font-ui); font-weight: 700; font-variant: small-caps; letter-spacing: 0.02em; }
+.thm-definition { border-inline-start-color: var(--callout-info-bd); }
+.thm-lemma { border-inline-start-color: var(--callout-tip-bd); background: var(--thm-lemma-bg); }
+.thm-remark { border-inline-start-color: var(--thm-remark-bd); background: var(--thm-remark-bg); }
+.thm-notation { border-inline-start-color: var(--thm-notation-bd); background: var(--thm-notation-bg); }
+.thm-definition, .thm-theorem, .thm-example { background: var(--thm-blue-bg); }
+.thm-proof { border: 1px solid var(--border); background: transparent; }
+.thm-proof::after { content: "∎"; display: block; text-align: end; }
+
+/* collapsible details: theorem-box looks, native disclosure semantics. The §
+   anchor is a plain non-focusable <span> inside <summary> (a real <a> there
+   is invalid HTML, and any focusable control trips axe nested-interactive);
+   click copies the URL without navigating, and it stays visible on touch. */
+.thm-details {
+  position: relative;
+  @extend %card;
+  background: var(--bg);
+  border-inline-start: 0.35rem solid var(--muted);
+}
+.thm-details > summary {
+  font-family: var(--font-ui); font-weight: 700; cursor: pointer;
+  border-radius: var(--radius-sm); padding-inline-end: 2rem;
+}
+/* in-summary permalink: valid phrasing content (a real <a> here is invalid
+   HTML, and any focusable control trips axe nested-interactive); shown via
+   the hover/focus rules above, always on touch */
+.thm-details > summary .thm-anchor {
+  margin-inline-start: 0.5rem; font-weight: 400; cursor: pointer;
+}
+.thm-details__body > p:last-child { margin-bottom: 0.2rem; }

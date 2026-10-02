@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="main-content" id="main" tabindex="-1">
+  {% set crumbs_ancestors = page.ancestors %}{% set crumbs_title = page.title %}{% include "partials/crumbs.html" %}
+  <h1>{{ page.title }}</h1>
+  {% if page.extra.author or page.extra.proofread_by %}
+  <p class="byline">
+    {% if page.extra.author %}<span>by {{ page.extra.author }}</span>{% endif %}
+    {% if page.extra.proofread_by %}<span>proofread by {{ page.extra.proofread_by }}</span>{% endif %}
+  </p>
+  {% endif %}
+  {% include "partials/admonitions.html" %}
+</main>
+{% endblock content %}
+{% block after_content %}
+{# Weight-ordered siblings via Zola built-ins (same order as section.pages). #}
+{% set prev = page.lower %}{% set next = page.higher %}
+{% if prev or next %}
+<nav class="pager" aria-label="Pagination">
+  {% if prev %}<a class="pager__prev" href="{{ <kb.rel url={prev.permalink} base={config.base_url} rp={rp} /> }}">← {{ prev.title }}</a>{% endif %}
+  {% if next %}<a class="pager__next" href="{{ <kb.rel url={next.permalink} base={config.base_url} rp={rp} /> }}">{{ next.title }} →</a>{% endif %}
+</nav>
+{% endif %}
+{% if prev %}<link rel="prefetch" href="{{ <kb.rel url={prev.permalink} base={config.base_url} rp={rp} /> }}">{% endif %}
+{% if next %}<link rel="prefetch" href="{{ <kb.rel url={next.permalink} base={config.base_url} rp={rp} /> }}">{% endif %}
+{# Prerender sibling pages so same-chapter nav is instant (prefetch above warms
+   non-Chromium caches; the site-wide hover rule lives in base.html).
+   Moderate, not immediate: list rules without eagerness prerender on load. #}
+{% if prev or next %}<script type="speculationrules">{"prerender":[{ "source": "list", "urls": [{% if prev %}{{ <kb.rel url={prev.permalink} base={config.base_url} rp={rp} /> | json_encode | safe }}{% endif %}{% if prev and next %},{% endif %}{% if next %}{{ <kb.rel url={next.permalink} base={config.base_url} rp={rp} /> | json_encode | safe }}{% endif %}], "eagerness": "moderate"}]}</script>{% endif %}
+{% endblock after_content %}

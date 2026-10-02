@@ -1,0 +1,98 @@
+{# Document-relative prefix: "./" at the root, "../" x depth elsewhere, so
+   `zola build` output works over file://, on any host/port, and subpaths.
+   get_url/permalink always return base_url + path, so swapping the base for
+   this prefix stays correct whatever base_url is (incl. `zola serve`). #}
+{% set _p = current_path | trim_start(pat="/") | trim_end(pat="/") %}
+{% set_global rp = "./" %}
+{% if _p != "" %}
+{% set _n = _p | split(pat="/") | length %}
+{% set_global rp = "" %}
+{% for _i in range(end=_n) %}{% set_global rp = rp ~ "../" %}{% endfor %}
+{% endif %}
+{# Single source for "this page has a TOC" (topbar toggle + toc.html rail):
+   computed once here so the two can never drift apart. Lives beside `rp`
+   on purpose — set_global inside an included partial does not propagate
+   back to this scope, so a toc_data.html partial cannot own it. #}
+{% if page and page.toc %}{% set_global toc = page.toc %}{% elif section and section.toc %}{% set_global toc = section.toc %}{% endif %}
+<!DOCTYPE html>
+{# no-trans suppresses all transitions until core.js removes it on load:
+   prevents first-paint theme/flash flicker (body bg/color transitions). #}
+<html lang="en" class="no-trans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#fdfcf9" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#131210" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231663c7'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='white' font-family='serif' font-style='italic'%3E%E2%88%9E%3C/text%3E%3C/svg%3E">
+  {% if page and page.title %}{% set meta_title = page.title ~ " · " ~ config.title %}{% elif section and section.title and section.title != config.title %}{% set meta_title = section.title ~ " · " ~ config.title %}{% else %}{% set meta_title = config.title %}{% endif %}
+  {% if page and page.description %}{% set meta_desc = page.description %}{% elif section and section.description %}{% set meta_desc = section.description %}{% else %}{% set meta_desc = config.description %}{% endif %}
+  {% if page %}{% set meta_url = page.permalink %}{% elif section %}{% set meta_url = section.permalink %}{% else %}{% set meta_url = config.base_url %}{% endif %}
+  {% if meta_desc %}<meta name="description" content="{{ meta_desc }}">{% endif %}
+  <meta property="og:title" content="{{ meta_title }}">
+  {% if meta_desc %}<meta property="og:description" content="{{ meta_desc }}">{% endif %}
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ meta_url }}">
+  <meta property="og:site_name" content="{{ config.title }}">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ meta_title }}">
+  {# twitter:description falls back to og:description per Twitter Cards spec #}
+  <link rel="canonical" href="{{ meta_url }}">
+  {% block head_extra %}{% endblock head_extra %}
+  {# Asset URLs swap config.base_url for the document-relative prefix so
+     `zola build` output loads over file://, on any host/port, and under
+     subpaths. get_url always returns base_url + path, so this stays correct
+     whatever base_url is (including `zola serve`). Canonical/og: URLs below
+     stay absolute (SEO validity). Preload hrefs must match @font-face URLs. #}
+  <link rel="manifest" href="{{ <kb.rel url={get_url(path='manifest.webmanifest')} base={config.base_url} rp={rp} /> }}">
+  <link rel="apple-touch-icon" href="{{ <kb.rel url={get_url(path='icons/icon-192.png')} base={config.base_url} rp={rp} /> }}">
+  <title>{% block title %}{{ meta_title }}{% endblock title %}</title>
+  {# Math-font CDN preconnect lives in partials/math_head.html, gated on the
+     same math flag as the NewCM preloads: math-less pages (graph/chapters/
+     login/offline) skip DNS+TCP+TLS entirely. Absolute URL on purpose (no rp
+     swap for external hosts); crossorigin matches the anonymous font fetch
+     so the connection is reusable. #}
+  {# preload the body fonts: same-origin, fetched on every page, consumed immediately.
+     Hrefs deliberately carry NO cachebust query: they must byte-match the
+     @font-face src URLs in _fonts.scss, or Chrome treats them as different
+     resources — the preload goes unused AND the CSS triggers a second fetch
+     (verified duplicate in the network log). book.css/js keep cachebust
+     because their referencing tags carry the same hashed URL. #}
+  <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/stix-two-regular.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/source-sans-3-regular.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/source-sans-3-bold.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ <kb.rel url={get_url(path='book.css', cachebust=true)} base={config.base_url} rp={rp} /> }}">
+  {# Print rules ship separately with media="print": lowest fetch priority,
+     never render-blocking. Link order matters — print.css stays after
+     book.css so it wins same-specificity ties at print time. #}
+  <link rel="stylesheet" href="{{ <kb.rel url={get_url(path='print.css', cachebust=true)} base={config.base_url} rp={rp} /> }}" media="print">
+  <script>(function(){try{var t=localStorage.getItem("theme");var dark=t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches);if(dark)document.documentElement.setAttribute("data-theme","dark");if(localStorage.getItem("font")==="sans")document.documentElement.setAttribute("data-font","sans");if(localStorage.getItem("collapse-sidebar")==="true")document.documentElement.classList.add("collapse-mode");if(localStorage.getItem("collapse-toc")==="true")document.documentElement.classList.add("toc-collapsed");}catch(e){}})();</script>
+  {% block math_head %}{% include "partials/math_head.html" %}{% endblock math_head %}
+  {# Site-wide hover pre-warming for same-origin navigations (Chromium);
+     /api/* never renders a page and /graph/* pays heavy canvas init, so both
+     are excluded. Sibling-list prerendering lives in page.html. #}
+  <script type="speculationrules">{"prerender":[{ "source": "document", "where": { "and": [{ "href_matches": "/*" }, { "not": { "href_matches": "/api/*" } }, { "not": { "href_matches": "/graph/*" } }] }, "eagerness": "moderate" }]}</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="sr-only" role="status" aria-live="polite" id="route-status"></div>
+{% block sidebar %}{% include "partials/leftbar.html" %}{% endblock sidebar %}
+<div class="page">
+  {% block topbar %}{% include "partials/topbar.html" %}{% endblock topbar %}
+  <div class="page__content">
+    <div class="book-content">
+      {% block content %}{% endblock content %}
+    </div>
+    {% block after_content %}{% endblock after_content %}
+  </div>
+</div>
+{% block tocside %}{% include "partials/toc.html" %}{% endblock tocside %}
+{# elasticlunr loads lazily on first search use (see loadIdx in core.js).
+   fetchpriority="low": the bundle is deferred and never on the critical path;
+   keep it yielded to fonts/CSS/MathJax the same way the MathJax tag does. #}
+<script defer fetchpriority="low" src="{{ <kb.rel url={get_url(path='js/core.js', cachebust=true)} base={config.base_url} rp={rp} /> }}"></script>
+{# SW is HTTP-only (browsers have no SW on file://); relative script+scope resolve to the site root from any depth. #}
+<script>try{if("serviceWorker"in navigator){window.addEventListener("load",function(){try{navigator.serviceWorker.register("{{ rp }}sw.js",{scope:"{{ rp }}"}).catch(function(){})}catch(e){}})}}catch(e){}</script>
+{% block js_body %}{% endblock js_body %}
+</body>
+</html>

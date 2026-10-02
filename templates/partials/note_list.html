@@ -1,0 +1,5 @@
+<ul class="section-pages">
+  {% for p in pages %}
+  <li>{{ <kb.page_link url={<kb.rel url={p.permalink} base={config.base_url} rp={rp} />} text={p.title or p.slug} /> }}{% if p.description %} — {{ p.description }}{% endif %}</li>
+  {% endfor %}
+</ul>

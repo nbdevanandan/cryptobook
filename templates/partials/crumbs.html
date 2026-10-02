@@ -1,0 +1,5 @@
+{# Shared breadcrumb trail (page.html + section.html). Set crumbs_ancestors
+   (section path list) and crumbs_title before including; rp/config come from
+   the base context. Root section (_index.md) is skipped by path. Home link
+   always renders, even when ancestors is empty. #}
+<nav class="crumbs" aria-label="Breadcrumb"><a href="{{ rp }}">Home</a>{% for anc in crumbs_ancestors %}{% set asec = get_section(path=anc) %}{% if anc != "_index.md" %}<span aria-hidden="true"> / </span><a href="{{ <kb.rel url={asec.permalink} base={config.base_url} rp={rp} /> }}">{{ asec.title }}</a>{% endif %}{% endfor %}<span aria-hidden="true"> / </span><span aria-current="page">{{ crumbs_title }}</span></nav>

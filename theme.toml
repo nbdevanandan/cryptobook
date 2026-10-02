@@ -1,0 +1,4 @@
+name = "cryptobook"
+description = "Ultra-lightweight MATbook fork: math knowledge base, no games, SSR-first"
+license = "MIT"
+min_version = "0.23.5"

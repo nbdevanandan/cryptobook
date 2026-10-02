@@ -1,0 +1,14 @@
+{% extends "bare.html" %}
+{# Cached by the SW as the offline fallback: no math, no pager, no search
+   payload — everything it needs (shell CSS + one font) is precached.
+   Sidebar/topbar/TOC stay blank like login.html: note titles must not leak
+   to unauthenticated viewers of this public page. #}
+{% block content %}
+<main class="main-content offline-page" id="main" tabindex="-1">
+  <h1>{{ page.title }}</h1>
+  {# Raw content on purpose (see chapters.html): the offline note never uses
+     callout syntax. The base_url swap is kept so any future link in it still
+     resolves document-relatively (file://, subpaths). #}
+  {{ page.content | replace(from=config.base_url ~ "/", to=rp) | safe }}
+</main>
+{% endblock content %}

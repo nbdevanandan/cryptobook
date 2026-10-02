@@ -1,0 +1,26 @@
+{# Standalone login gate: no sidebar/topbar/TOC (their note titles must not
+   leak to unauthenticated viewers). Served publicly by the edge middleware;
+   POSTs to /api/login, which sets the session cookie. Inherits head assets
+   (book.css, fonts, theme) so the page renders styled over file:// too. #}
+{% extends "bare.html" %}
+{% block head_extra %}<meta name="robots" content="noindex, nofollow">{% endblock head_extra %}
+{% block title %}Log in · {{ config.title }}{% endblock title %}
+{% block content %}
+<main class="main-content login-page" id="main" tabindex="-1">
+  <h1>Log in</h1>
+  <p>This knowledge base is password-protected.</p>
+  <form class="login-form" method="post" action="{{ rp }}api/login">
+    <label class="login-label" for="login-password">Password</label>
+    <input class="login-input" id="login-password" name="password" type="password"
+      autocomplete="current-password" required autofocus>
+    <input type="hidden" name="next" id="login-next" value="/">
+    <button class="login-button" type="submit">Log in</button>
+    <p class="login-error" id="login-error" role="alert" hidden>Wrong password. Try again.</p>
+  </form>
+</main>
+{# Surface server feedback (?error=1 on failed login) and preserve the
+   post-login destination (?next=…): both arrive as query params, but the form
+   is static HTML, so wire them up here. `next` is sanitized exactly like the
+   server's sanitizeNext (leading /, never //) — the server re-checks anyway. #}
+<script>(function(){try{var q=new URLSearchParams(location.search);var ec=q.get("error");if(ec){var e=document.getElementById("login-error");if(e){e.hidden=false}}var n=q.get("next");if(n){n=n.trim().replace(/\\/g,"/");if(n.charAt(0)==="/"&&n.charAt(1)!=="/"&&!/[\x00-\x1f\x7f]/.test(n)){var f=document.getElementById("login-next");if(f){f.value=n}}}if(q.get("loggedout")==="1"){try{if(navigator.serviceWorker&&navigator.serviceWorker.controller){navigator.serviceWorker.controller.postMessage({type:"purge-pages"})}}catch(pe){}try{history.replaceState(null,"",location.pathname)}catch(he){}}}catch(err){}})();</script>
+{% endblock content %}

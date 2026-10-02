@@ -1,0 +1,147 @@
+/* Print: textbook-on-paper. Compiled via print.scss to a standalone
+   print.css, loaded with media="print" AFTER book.css in base.html: link
+   order (not import order) is what lets same-specificity print overrides
+   win ties — notably the dark-theme code/highlight remaps below, without
+   which dark mode would print dark. On paper: force the light palette, hide
+   all app chrome, wrap code instead of clipping it, and keep
+   boxes/equations/figures from splitting across pages. Browsers strip
+   backgrounds by default; exact-adjust preserves light tints. */
+@page { margin: 1.4cm 0.9cm; }
+@media print {
+  html, html[data-theme="dark"] {
+    --bg: #fff; --fg: #161616; --muted: #3d3d3d;
+    --accent: #0b4fa8; --visited: #4d0f85;
+    --border: #8a8a8a; --code-bg: #f2f2f2; --sidebar-bg: #fff;
+    /* every tinted surface prints plain paper (keep this list in sync when
+       adding background tokens — a missed one prints tinted) */
+    @each $t in info, important, tip, warning, example {
+      --callout-#{$t}-bg: #fff;
+    }
+    @each $t in blue, lemma, remark, notation {
+      --thm-#{$t}-bg: #fff;
+    }
+    --shadow-card: none; --shadow-raised: none; --inset-hi: none;
+    color-scheme: light;
+  }
+  body {
+    background: #fff; color: #161616; font-size: 11pt; line-height: 1.55;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .menu, .topbar, .toc-sidebar, .skip-link, .login-form, .login-error,
+  .search-results, .code-copy, .lightbox, .pager, #graph-canvas { display: none !important; }
+  .page { margin: 0; }
+  .page__content { padding: 0; }
+  .main-content { max-width: none; }
+  /* Unify print measure WIDER than the screen reading column: at 68ch the
+     centered column leaves ~120pt gutters each side, which read as wide
+     margins (the @page margin itself is non-binding below that). 90ch keeps
+     all page types equal with ~60pt gutters. Same selectors as _layout.scss
+     so ties break toward print (later stylesheet); screen cascade untouched. */
+  .book-content:has(.chapters),
+  .book-content:has(> .main-content > ul.section-pages),
+  .book-content:has(> .graph-page) { max-width: min(90ch, 100%); }
+  /* Notes print at the same wider measure (their screen 68ch column would
+     otherwise leave the same wide gutters). */
+  .book-content { max-width: min(90ch, 100%); }
+  .main-content a { color: inherit; text-decoration: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; color: var(--muted); }
+  /* Equation cross-references: the screen span is not a link, so hide it and
+     show its real-anchor twin instead — (1) stays a clickable internal link
+     in the PDF (same-document # fragments need no URL annotation). */
+  .mjx-eqref { display: none !important; }
+  .mjx-eqref-print { display: inline !important; color: var(--accent); }
+  .main-content pre {
+    white-space: pre-wrap; word-break: break-word;
+    /* Screen scrolls pre (overflow-x: auto) with max-content code/.giallo-l
+       lines; on paper that drops wide lines from the PDF entirely — undo all
+       three so pre-wrap engages (min-width:100% keeps hl backgrounds full). */
+    overflow: visible;
+  }
+  .main-content pre > code, .main-content .giallo-l { width: auto; }
+  /* Inline code must never straddle a page break leaving a background sliver
+     on the previous page: keep short spans together (overlong spans ignore
+     the hint and fall back below). Scoped to inline code only — pre blocks
+     paginate normally, and boxes/tables/display-math already carry their own
+     break-inside: avoid above. */
+  .main-content :not(pre) > code {
+    break-inside: avoid;
+    box-decoration-break: slice;
+    -webkit-box-decoration-break: slice;
+  }
+  /* Keep every box type off page splits: admonitions (blockquote.callout
+     from the build-side rewrite + div.callout from kb.callout), theorem
+     envs (.thm), collapsibles (.thm-details, printed expanded — see below),
+     chapter cards, and diagrams (.diagram-card is a <figure>, listed
+     explicitly so a future markup change can't silently reintroduce
+     splits). Boxes taller than a full page still split; box-decoration-break
+     keeps their borders/background on each fragment. */
+  .callout, .thm, .thm-details, .chapter-card, .diagram-card,
+  figure, pre, table, mjx-container[display="true"] {
+    break-inside: avoid;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  /* Fragmented callouts must not clone a closing border onto the previous
+     page (break-inside:avoid is only a hint Chromium overrides): slice cuts
+     the decoration at the break, and radius 0 removes the rounded-nub
+     remnant. Other box types keep clone (per-fragment borders). Same slice
+     precedent as inline code above; callouts are untouched by printFit. */
+  .callout {
+    box-decoration-break: slice;
+    -webkit-box-decoration-break: slice;
+    border-radius: 0;
+  }
+  h1, h2, h3 { break-after: avoid; }
+  /* Screen scroll containers become clippers on paper (nothing scrolls in
+     print): let wide math spill instead of truncating, and restore tables to
+     wrapping table layout (screen max-content sizing exists only for the
+     overflow-x wrapper; kept, it squeezes columns until cell tails drop). */
+  mjx-container[jax="CHTML"][display="true"] { overflow-x: visible; }
+  /* Screen sizes tables to max-content inside the scrolling wrapper; on paper
+     there is no scroll, so fitting tables shrink-wrap via width:auto while
+     core.js splits over-wide ones into full-width .print-chunk tables (auto
+     layout, natural widths — never squeezed). */
+  .main-content table { display: table; overflow-x: visible; width: auto; }
+  .main-content table.print-chunk { width: max-content; max-width: 100%; min-width: 0; }
+  /* Numbered "Table, part X of N" captions (emitted by printFit) marking
+     chunks of one split table. Left-aligned small caps, muted. */
+  .main-content caption.print-chunk-cap {
+    text-align: left; font-size: 0.8rem; color: var(--muted);
+    padding: 0 0 0.3rem; white-space: nowrap;
+  }
+  .table-scroll { overflow-x: visible; }
+  /* core.js hides an over-wide original (or its wrapper) around printing
+     (class + marker are removed in afterprint); the rule is print-scoped so a
+     missed restore can never blank tables on screen. */
+  .main-content .print-src { display: none; }
+  /* Closed <details> must print expanded. Primary mechanism is JS
+     (beforeprint opens, afterprint restores); this CSS backstop covers
+     no-JS printing against both the legacy child rule and Chromium's
+     ::details-content hiding. The summary marker stays as an honest signal
+     that the box was collapsible on screen. */
+  details:not([open]) > :not(summary) { display: block; }
+  details:not([open])::details-content { display: block; content-visibility: visible; }
+  /* Dark-theme explicit colors outrank the light palette above by
+     specificity, so re-pin every print surface that has a dark variant.
+     Same selectors as screen, later in source: print always wins. */
+  html[data-theme="dark"] .main-content :not(pre) > code {
+    background: #f2f2f2; border-color: #8a8a8a;
+  }
+  html[data-theme="dark"] .diagram-card { color: #161616; }
+  /* Token colors as one map (not 13 hand-written rules): identical
+     selectors, same order, same output. */
+  $print-dark-remap: (
+    code: #24292e,
+    1: #24292e, 2: #57606a, 3: #57606a, 4: #005cc5, 5: #116329, 6: #6f42c1,
+    7: #6f42c1, 8: #586069, 9: #032f62, 10: #b31d28, 11: #b31d28, 12: #9a6700,
+  );
+  @each $k, $v in $print-dark-remap {
+    html[data-theme="dark"] .z-d-#{$k} { color: $v; }
+  }
+  html[data-theme="dark"] .giallo-ln { color: #57606a; }
+  /* Highlighted lines: the dark slate bg would print as a black bar. Pin the
+     light highlight bg; the remapped tokens above all pass AA on it. */
+  html[data-theme="dark"] .giallo-l.z-d-hl { background-color: #e6e9ee; }
+}
+/* Math menu + dialog (core.js mjx*): transient screen UI, never printed. */
+.mjx-menu, .mjx-dialog { display: none !important; }

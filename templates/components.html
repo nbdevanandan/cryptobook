@@ -1,0 +1,191 @@
+{# cryptobook global components.
+   Callouts: kb.callout(type, title). Theorem envs: kb.theorem/lemma/definition/
+   example/remark/notation(name?, label?) + kb.proof(label?) — label="…" adds
+   id="…" plus a § permalink (link with <a href="#…">, not markdown). Collapsible:
+   kb.details(summary, label?) renders native <details> (anchor lives in <summary>).
+   Diagram: kb.figure(src, alt, caption?) — alt required. Graph + nav below. #}
+
+{% component kb.callout(type: string = "info", title: string = "") %}
+<div class="callout callout-{{ type }}"><span class="callout-title">{{ title or type | capitalize }}</span>{{ body | markdown | safe }}</div>
+{% endcomponent kb.callout %}
+
+{# Shared skeleton for the numbered envs + proof (public names/signatures unchanged). #}
+{% component kb._box(kind: string, word: string, num: string = "y", name: string = "", label: string = "", b: string = "") %}
+<div class="thm thm-{{ kind }}"{% if label %} id="{{ label }}"{% endif %}><span class="thm-head">{{ word }}{% if num %} <span class="thm-num"></span>{% endif %}{% if name %} ({{ name }}){% endif %}. </span>{% if label %}<a class="thm-anchor" href="#{{ label }}" aria-label="Permalink to this {{ word | lower }}">§</a>{% endif %}{{ b | markdown | safe }}</div>
+{% endcomponent kb._box %}
+
+{% component kb.theorem(name: string = "", label: string = "") %}
+{{ <kb._box kind="theorem" word="Theorem" name={name} label={label} b={body} /> }}
+{% endcomponent kb.theorem %}
+
+{% component kb.lemma(name: string = "", label: string = "") %}
+{{ <kb._box kind="lemma" word="Lemma" name={name} label={label} b={body} /> }}
+{% endcomponent kb.lemma %}
+
+{% component kb.definition(name: string = "", label: string = "") %}
+{{ <kb._box kind="definition" word="Definition" name={name} label={label} b={body} /> }}
+{% endcomponent kb.definition %}
+
+{% component kb.proof(label: string = "") %}
+{{ <kb._box kind="proof" word="Proof" num="" label={label} b={body} /> }}
+{% endcomponent kb.proof %}
+
+{% component kb.example(name: string = "", label: string = "") %}
+{{ <kb._box kind="example" word="Example" name={name} label={label} b={body} /> }}
+{% endcomponent kb.example %}
+
+{% component kb.remark(name: string = "", label: string = "") %}
+{{ <kb._box kind="remark" word="Remark" name={name} label={label} b={body} /> }}
+{% endcomponent kb.remark %}
+
+{% component kb.notation(name: string = "", label: string = "") %}
+{{ <kb._box kind="notation" word="Notation" name={name} label={label} b={body} /> }}
+{% endcomponent kb.notation %}
+
+{% component kb.details(summary: string = "Details", label: string = "") %}
+<details class="thm-details"{% if label %} id="{{ label }}"{% endif %}><summary><span>{{ summary }}</span>{% if label %}<span class="thm-anchor" data-href="#{{ label }}" aria-hidden="true">§</span>{% endif %}</summary><div class="thm-details__body">{{ body | markdown | safe }}</div></details>
+{% endcomponent kb.details %}
+
+{# Math shield (uniform rule: ALL math goes through kb.math — never bare $).
+   Markdown mangles raw TeX (\{, \\, *, _, < inside $…$) before render, and
+   Zola exposes no math passthrough. This component entity-encodes every
+   Markdown-sensitive char and emits \(…\) / \[…\] delimiters — also
+   entity-encoded, since a literal backslash-paren would die as a Markdown
+   escape in the component output. Raw & passes through Markdown unharmed, so
+   it needs no rule (write raw TeX, not entities). Browsers decode entities
+   into textContent, so the SSR script receives pristine TeX.
+   Modes: inline (default) → span.kb-math \(…\); block → div.kb-math-block
+   \[…\]; equation → bare \begin{equation}…\label{…}\end{equation} (no
+   \(…\) wrapper — AMS numbering breaks if double-wrapped). Standalone
+   \eqref stays raw inside kb.math inline or plain text. Captions cannot host
+   component bodies (attribute strings), so bare $…$ is allowed ONLY inside
+   kb.figure caption="…" — the SSR script typesets figcaption HTML directly.
+   No CSS: wrappers are transparent (SSR replaces delimiters with CHTML). #}
+{# Single-line template on purpose: any newline emitted here becomes a blank
+   line around inline uses, which Markdown reads as a paragraph split (each
+   formula isolated in its own <p>). Never re-wrap this onto multiple lines. #}
+{% component kb.math(mode: string = "inline", label: string = "") %}{% set tex = body | replace(from="\\", to="&#92;") | replace(from="*", to="&#42;") | replace(from="_", to="&#95;") | replace(from="[", to="&#91;") | replace(from="]", to="&#93;") | replace(from="<", to="&lt;") | replace(from=">", to="&gt;") | replace(from="`", to="&#96;") %}{% if mode == "equation" %}\begin{equation}{{ tex | safe }}{% if label %} \label{{ "{" }}{{ label }}{{ "}" }}{% endif %}\end{equation}{% elif mode == "block" %}<div class="kb-math-block">&#92;[{{ tex | safe }}&#92;]</div>{% else %}<span class="kb-math">&#92;({{ tex | safe }}&#92;)</span>{% endif %}{% endcomponent kb.math %}
+
+{# One page-link idiom for all five call sites (section/chapters lists,
+   graph list, leftbar, kb.nav). url is already document-relative; the macro
+   body stays one line so inline use emits byte-identical markup. #}
+{% component kb.page_link(url: string, text: string, cur: bool = false) %}<a href="{{ url }}"{% if cur %} aria-current="page"{% endif %}>{{ text }}</a>{% endcomponent kb.page_link %}
+
+{# Document-relative URL: single home for the base_url→rp swap behind every
+   link/src/href (file://, any host/port, subpaths). Body stays one line so
+   inline use in attributes emits byte-identical markup. #}
+{% component kb.rel(url: string, base: string, rp: string) %}{{ url | replace(from=base ~ "/", to=rp) }}{% endcomponent kb.rel %}
+
+{# Collapsible left-nav. Each chapter row is a chevron <button> (in-place
+   toggle) plus the chapter link as SIBLINGS — never a link inside a
+   <summary> (axe nested-interactive violation: AT/keyboard handling of
+   interactive summary descendants is inconsistent). The note list toggles
+   via `hidden`, announced with `aria-expanded`/`aria-controls`; the chevron
+   glyph follows `aria-expanded` in CSS. No-JS users still reach every note
+   through its chapter page (which renders with that chapter expanded).
+   Server renders the active path expanded; the delegated click listener in
+   core.js (document-level, so router menu swaps need no re-init) handles
+   the rest. Pass current_path in as `cur`, plus the site base URL and the
+   document-relative prefix (component scope is isolated: no config, no
+   current_path here). #}
+{% component kb.nav(sec, cur, base, rp) %}
+{% for sp in sec.subsections %}
+{% set s = get_section(path=sp) %}
+{% set open = cur is starting_with(pat=s.path) %}
+{% set nid = "menu-notes-" ~ (s.path | replace(from="/", to="-") | replace(from=".", to="-") | lower) %}
+<li class="menu__chapter{% if open %} menu__chapter--active{% endif %}">
+<div class="menu__row"><button type="button" class="menu__chev" aria-expanded="{{ open }}" aria-controls="{{ nid }}" aria-label="Toggle {{ s.title or s.path }} notes"><span aria-hidden="true" class="menu__chev-glyph"></span></button>{{ <kb.page_link url={<kb.rel url={s.permalink} base={base} rp={rp} />} text={s.title or s.path} cur={open} /> }}</div>
+{% if s.pages %}<ol class="menu__pages" id="{{ nid }}"{% if not open %} hidden{% endif %}>{% for p in s.pages %}<li>{{ <kb.page_link url={<kb.rel url={p.permalink} base={base} rp={rp} />} text={p.title or p.slug} cur={cur == p.path} /> }}</li>{% endfor %}</ol>{% endif %}
+{{ <kb.nav sec={s} cur={cur} base={base} rp={rp} /> }}
+</li>
+{% endfor %}
+{% endcomponent kb.nav %}
+
+{# Graph nodes (JSON), recursive. Titles are </script>-escaped (<\/ is a valid
+   JSON escape) so a title can never break out of the graph-data block.
+   Same base/rp deal as kb.nav. #}
+{% component kb.gnodes(sec, base, rp) %}
+{% for sp in sec.subsections %}
+{% set s = get_section(path=sp) %}
+,{"id": {{ s.path | json_encode | safe }}, "title": {{ (s.title or s.path) | json_encode | replace(from="</", to="<\\/") | safe }}, "url": {{ <kb.rel url={s.permalink} base={base} rp={rp} /> | json_encode | safe }}, "kind": "section"}
+{{ <kb.gnodes sec={s} base={base} rp={rp} /> }}
+{% for p in s.pages %}
+,{"id": {{ p.path | json_encode | safe }}, "title": {{ (p.title or p.slug) | json_encode | replace(from="</", to="<\\/") | safe }}, "url": {{ <kb.rel url={p.permalink} base={base} rp={rp} /> | json_encode | safe }}, "kind": "page"}
+{% endfor %}
+{% endfor %}
+{% endcomponent kb.gnodes %}
+
+{# Hierarchy edges (JSON), recursive. #}
+{% component kb.hedges(sec) %}
+{% for sp in sec.subsections %}
+{% set s = get_section(path=sp) %}
+,{"s": {{ sec.path | json_encode | safe }}, "t": {{ s.path | json_encode | safe }}, "k": "h"}
+{{ <kb.hedges sec={s} /> }}
+{% for p in s.pages %}
+,{"s": {{ s.path | json_encode | safe }}, "t": {{ p.path | json_encode | safe }}, "k": "h"}
+{% endfor %}
+{% endfor %}
+{% endcomponent kb.hedges %}
+
+{# Cross edges for one node against whole tree (JSON), recursive. Each
+   permalink is tested with `"`, `?`, `#`, `/` terminators: the href="
+   boundary alone keeps chapter URLs from matching as mere prefixes of
+   their pages' URLs, but would miss `?query` / `#fragment` / trailing-slash
+   links (a plain substring test counted those prefix hits as false
+   cross-edges — about half of all x-edges at scale). #}
+{% component kb.xscan(cur, sec) %}
+{% for sp in sec.subsections %}
+{% set s = get_section(path=sp) %}
+{% if cur.path != s.path and (s.permalink ~ '"' in cur.content or s.permalink ~ '?' in cur.content or s.permalink ~ '#' in cur.content or s.permalink ~ '/' in cur.content) %}
+,{"s": {{ cur.path | json_encode | safe }}, "t": {{ s.path | json_encode | safe }}, "k": "x"}
+{% endif %}
+{{ <kb.xscan cur={cur} sec={s} /> }}
+{% for p in s.pages %}
+{% if cur.path != p.path and (p.permalink ~ '"' in cur.content or p.permalink ~ '?' in cur.content or p.permalink ~ '#' in cur.content or p.permalink ~ '/' in cur.content) %}
+,{"s": {{ cur.path | json_encode | safe }}, "t": {{ p.path | json_encode | safe }}, "k": "x"}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endcomponent kb.xscan %}
+
+{# Cross edges for every node, recursive. `root` stays the tree top. #}
+{% component kb.xedges(sec, root) %}
+{% for sp in sec.subsections %}
+{% set s = get_section(path=sp) %}
+{{ <kb.xscan cur={s} sec={root} /> }}
+{{ <kb.xedges sec={s} root={root} /> }}
+{% for p in s.pages %}
+{{ <kb.xscan cur={p} sec={root} /> }}
+{% endfor %}
+{% endfor %}
+{% endcomponent kb.xedges %}
+
+{# Accessible pre-rendered diagram figure. SVGs live in static/diagrams/ and are
+   inlined at build time (no fetch, no layout shift); missing SVGs fall back
+   to <img>. Raster formats (.png/.jpg) always use lazy <img> — load_data
+   errors on binary files, so never call it for those. CurrentColor strokes
+   follow the theme via .diagram-card CSS.
+   `rel` is the document-relative prefix to the site root ("./" on the
+   homepage, "../../" two levels down…): pass it for raster images so the
+   <img> works over file:// as well as HTTP. Component scope is isolated
+   (no config/current_path), hence the explicit arg. Omit it and the src
+   stays an absolute get_url (backwards compatible). #}
+{% component kb.figure(src: string, alt: string, caption: string = "", rel: string = "", width: string = "") %}
+<figure class="diagram-card">
+{% if src is ending_with(pat=".svg") %}
+{% set svg = load_data(path=src, required=false) %}
+{% else %}
+{% set meta = get_image_metadata(path=src, allow_missing=true) %}
+{% endif %}
+{% if svg is defined and svg %}
+{% set svg = svg | regex_replace(pattern="<\\?xml.*?\\?>", rep="") %}
+{% set svg_open = "<svg role=\"img\" aria-label=\"" ~ (alt | escape) ~ "\"" %}
+{% if width %}{% set svg_open = svg_open ~ " style=\"width: " ~ width ~ "\"" %}{% endif %}
+{{ svg | replace(from="<svg", to=svg_open) | safe }}
+{% else %}
+{% if rel %}{% set img_src = rel ~ src %}{% else %}{% set img_src = get_url(path=src) %}{% endif %}
+<img src="{{ img_src }}" alt="{{ alt }}" loading="lazy"{% if width %} style="width: {{ width }}"{% endif %}{% if meta is defined and meta %} width="{{ meta.width }}" height="{{ meta.height }}"{% endif %}>
+{% endif %}
+{% if caption %}<figcaption>{{ caption | markdown | safe }}</figcaption>{% endif %}
+</figure>
+{% endcomponent kb.figure %}

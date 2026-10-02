@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<main class="main-content graph-page" id="main" tabindex="-1">
+  <h1>Graph</h1>
+  {% set root = get_section(path="_index.md") %}
+  <canvas id="graph-canvas" width="1160" height="640" tabindex="0" role="application" aria-roledescription="interactive graph" aria-label="Interactive note graph" aria-describedby="graph-hint"></canvas>
+  <p class="graph-hint" id="graph-hint">Drag to pan · scroll or pinch to zoom · click a node to open the note. Double-click resets the view. When the graph is focused, arrow keys pan, +/− zoom, 0 resets, Enter opens the centered node. Solid edges are hierarchy, dashed are cross-links.</p>
+  <details class="graph-list">
+    <summary>All notes</summary>
+    {% include "partials/graph_list.html" %}
+  </details>
+  <script type="application/json" id="graph-data">{"nodes": [
+  {"id": {{ root.path | json_encode | safe }}, "title": {{ (root.title or config.title) | json_encode | safe }}, "url": {{ <kb.rel url={root.permalink} base={config.base_url} rp={rp} /> | json_encode | safe }}, "kind": "section"}
+  {{ <kb.gnodes sec={root} base={config.base_url} rp={rp} /> }}
+  ], "edges": [
+  {# sentinel: kb.hedges/xedges emit ",{...}" with leading commas; graph.js drops this empty entry #}
+  {"s": "", "t": "", "k": "z"}
+  {{ <kb.hedges sec={root} /> }}
+  {{ <kb.xedges sec={root} root={root} /> }}
+  ]}</script>
+  {# No <noscript> duplicate: <details> above opens natively without JS. #}
+</main>
+{% endblock content %}
+{% block js_body %}
+{# Cachebusted like core.js in base.html: /js/* ships immutable/1yr and the SW
+   runtime-caches this file cache-first, so an unbusted URL would serve the
+   old bundle indefinitely after a redeploy. #}
+<script defer src="{{ <kb.rel url={get_url(path='js/graph.js', cachebust=true)} base={config.base_url} rp={rp} /> }}"></script>
+{% endblock js_body %}

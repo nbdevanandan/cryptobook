@@ -1,0 +1,11 @@
+{# Shared note list for graph.html (details + noscript share context: root). #}
+<ul>
+  <li>{{ <kb.page_link url={<kb.rel url={root.permalink} base={config.base_url} rp={rp} />} text={root.title or config.title} /> }}</li>
+  {% for sp in root.subsections %}
+  {% set s = get_section(path=sp) %}
+  <li>{{ <kb.page_link url={<kb.rel url={s.permalink} base={config.base_url} rp={rp} />} text={s.title or s.path} /> }} <span class="backlink-kind">chapter</span></li>
+  {% for p in s.pages %}
+  <li>{{ <kb.page_link url={<kb.rel url={p.permalink} base={config.base_url} rp={rp} />} text={p.title or p.slug} /> }}</li>
+  {% endfor %}
+  {% endfor %}
+</ul>

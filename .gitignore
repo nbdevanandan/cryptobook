@@ -1,0 +1,10 @@
+.DS_Store
+**__pycache__/
+.token
+.dev.vars
+.wrangler/
+.env
+**/.obsidian/
+public/
+cryptobase.zip
+.ruff_cache/

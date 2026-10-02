@@ -1,0 +1,27 @@
+{% set root = get_section(path="_index.md") %}
+<nav class="menu" id="menu" aria-label="Chapters">
+  <p class="menu__brand"><a href="{{ <kb.rel url={root.permalink} base={config.base_url} rp={rp} /> }}" translate="no">{{ config.title }}</a></p>
+  <ol class="menu__chapters">
+  {% if not root.subsections and not root.pages %}<li class="menu__empty">No chapters yet.</li>{% endif %}
+  {{ <kb.nav sec={root} cur={current_path} base={config.base_url} rp={rp} /> }}
+  {% for p in root.pages %}
+    {# Filter on URL path (same idiom as the footer aria-current below; slug
+       renames move the path with it, so gate pages can't leak into nav). #}
+    {% if p.path not in ["/graph/", "/chapters/", "/login/", "/offline/"] %}
+    <li>{{ <kb.page_link url={<kb.rel url={p.permalink} base={config.base_url} rp={rp} />} text={p.title or p.slug} cur={current_path == p.path} /> }}</li>
+    {% endif %}
+  {% endfor %}
+  </ol>
+  {# Scoped footer (stays inside nav to preserve the flex column layout). #}
+  <footer class="menu__footer">
+    {# rp already points at the site root ("./" here, "../" x depth
+       elsewhere), so root-relative links need no get_url round-trip.
+       Trailing slash pinned: without it the router pushStates the
+       slash-less URL and later pathname guards see /chapters instead
+       of /chapters/. #}
+    <a href="{{ rp }}chapters/"{% if current_path is starting_with(pat="/chapters") %} aria-current="page"{% endif %}>Chapters</a>
+    <a href="{{ rp }}graph/"{% if current_path is starting_with(pat="/graph") %} aria-current="page"{% endif %}>Graph view</a>
+    <form method="post" action="{{ rp }}api/logout" class="menu__logout"><button type="submit">Log out</button></form>
+    <button type="button" id="shortcuts-toggle" class="menu__toggle" aria-pressed="true">Shortcuts: on</button>
+  </footer>
+</nav>
