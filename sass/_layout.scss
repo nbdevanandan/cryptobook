@@ -119,6 +119,11 @@ html[data-theme="dark"] .menu__chapter--active > .menu__row {
   /* no text-shadow: dark accent (#9cc0e5) on code-bg already contrasts;
      the emboss read as extra bevel on the active chapter text. */
 }
+/* Dark generic above (html[data-theme="dark"] .menu a[aria-current], 0,3,2)
+   outranks the row reset (0,3,1) and re-bevels the chapter link inside its
+   own pill — same for the emboss, which the reset never clears. Re-strip
+   both here, scoped to the row so note-row pills keep their bevel. */
+html[data-theme="dark"] .menu .menu__row > a[aria-current] { box-shadow: none; text-shadow: none; }
 .menu__brand, .menu__footer { flex-shrink: 0; }
 .menu__footer { margin-top: 0.8rem; border-top: 1px solid var(--border); padding-top: 0.5rem; }
 .menu__footer a { display: block; margin: 0.15rem 0; }
@@ -163,9 +168,6 @@ html.collapse-mode .topbar { inset-inline-start: 0; }
   .topbar { inset-inline-start: 0; }
   .menu { z-index: var(--z-overlay); box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.2); }
   .page { margin-inline-start: 0; }
-  .topbar__brand { font-size: 1.05rem; }
-  .topbar .search-container { margin: 0 0.25rem; position: static; }
-  .search-results { left: 0.5rem; right: 0.5rem; }
 }
 html.topbar-hidden .topbar, html.topbar-force-hidden .topbar { transform: translateY(-100%); }
 @media (prefers-reduced-motion: reduce) {
@@ -183,6 +185,9 @@ html.topbar-hidden .topbar, html.topbar-force-hidden .topbar { transform: transl
    plus the icon buttons fit at 360px. */
 @media (max-width: 600px) {
   .topbar__brand, .topbar__spacer { display: none; }
+}
+@media (max-width: 760px) {
+  .topbar__brand { font-size: 1.05rem; }
 }
 .icon-btn {
   background: transparent; border: 1px solid transparent; border-radius: var(--radius-md);
@@ -396,6 +401,13 @@ html[data-theme="dark"] .search-results {
 .search-results__item { margin: 0; padding: 0.45rem 0.4rem; border-radius: var(--radius-sm); }
 .search-results__item:hover, .search-results__item.selected { background: var(--code-bg); }
 .search-results__item a { font-weight: 600; text-decoration: none; color: var(--accent); }
+/* Mobile: the dropdown was bound to the (short) input box; re-anchor it to
+   the full topbar. Stays below the base rules so the override wins at equal
+   specificity (same reason the 760px brand rule sits by its base above). */
+@media (max-width: 760px) {
+  .topbar .search-container { margin: 0 0.25rem; position: static; }
+  .search-results { left: 0.5rem; right: 0.5rem; }
+}
 
 /* pager */
 .backlink-kind { color: var(--muted); font-size: 0.85em; }
