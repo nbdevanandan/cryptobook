@@ -20,19 +20,19 @@
 .callout-title { font-family: var(--font-ui); font-weight: 700; display: block; margin-bottom: 0.3rem; }
 
 .callout-info { @include callout(var(--callout-info-bg), var(--callout-info-bd)); }
-.callout-info .callout-title { color: var(--callout-info); }
+.callout-info .callout-title { color: var(--callout-info-bd); }
 .callout-info .callout-title::before { content: "Info"; }
 .callout-important { @include callout(var(--callout-important-bg), var(--callout-important-bd)); }
-.callout-important .callout-title { color: var(--callout-error); }
+.callout-important .callout-title { color: var(--callout-important-bd); }
 .callout-important .callout-title::before { content: "Important"; }
 .callout-tip { @include callout(var(--callout-tip-bg), var(--callout-tip-bd)); }
-.callout-tip .callout-title { color: var(--callout-tip); }
+.callout-tip .callout-title { color: var(--callout-tip-bd); }
 .callout-tip .callout-title::before { content: "Tip"; }
 .callout-warning { @include callout(var(--callout-warning-bg), var(--callout-warning-bd)); }
-.callout-warning .callout-title { color: var(--callout-warn); }
+.callout-warning .callout-title { color: var(--callout-warning-bd); }
 .callout-warning .callout-title::before { content: "Warning"; }
 .callout-example { @include callout(var(--callout-example-bg), var(--callout-example-bd)); }
-.callout-example .callout-title { color: var(--callout-example); }
+.callout-example .callout-title { color: var(--callout-example-bd); }
 .callout-example .callout-title::before { content: "Example"; }
 /* Gap between the ::before keyword and the title text lives here (not in the
    markup): the kb.callout shortcode emits its title span with no surrounding

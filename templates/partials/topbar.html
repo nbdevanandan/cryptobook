@@ -19,8 +19,8 @@
   {# Always rendered (never conditional): the topbar persists across SPA navs,
      so a button missing on TOC-less pages could never reappear when navigating
      to a TOC page. Hidden inline when this page has no TOC; the router flips
-     display on every swap (see rebaseChrome). `toc` comes from
-     partials/toc_data.html (single source with toc.html). #}
+     display on every swap (see rebaseChrome). `toc` comes from the
+     singleton set in base.html (same value toc.html consumes). #}
   <button id="toggle-toc" class="icon-btn" aria-label="Toggle table of contents" title="Toggle contents ( ] )"{% if not toc %} style="display:none"{% endif %}>
     {% include "partials/menu_icon.html" %}
   </button>
