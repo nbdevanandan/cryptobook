@@ -6,12 +6,16 @@
    in a scroll container so the grid sizes to content instead of squeezing
    (the wrapper scrolls; printFit measures against it). Atomic regex so
    attributed tables wrap whole and closers never stray; code spans/escapes
-   never match, so only real tables are wrapped. #}
+   never match, so only real tables are wrapped. The callout regex accepts only
+   the five known types (`[!note]` and friends stay plain blockquotes instead
+   of minting an unstylable class) with an optional custom title after the
+   closing bracket — Obsidian's `|pipe title` or ` space title` form — which
+   lands in the title span after the injected `::before` keyword. #}
 {% if page %}{% set raw_content = page.content %}{% else %}{% set raw_content = section.content %}{% endif %}
 {{ raw_content
   | replace(from="\"" ~ config.base_url ~ "/", to="\"" ~ rp)
   | replace(from="'" ~ config.base_url ~ "/", to="'" ~ rp)
   | regex_replace(pattern="(?s)<h([234]) id=\"([^\"]+)\">(.*?)</h[234]>", rep="<h$1 id=\"$2\">$3<a class=\"h-anchor\" href=\"#$2\" aria-label=\"Permalink to this section\">§</a></h$1>")
   | regex_replace(pattern="(?s)<table(.*?)</table>", rep="<div class=\"table-scroll\"><table$1</table></div>")
-  | regex_replace(pattern="<blockquote>\\s*<p>\\[!(.*?)\\] ?", rep="<blockquote class=\"callout callout-$1\"><p><span class=\"callout-title\"></span>")
+  | regex_replace(pattern="<blockquote>\\s*<p>\\[!(info|important|tip|warning|example)(?:\\|([^\\[\\n<]*))?\\](?: +([^\\[\\n<]*))?", rep="<blockquote class=\"callout callout-$1\"><p><span class=\"callout-title\">$2$3</span>")
   | safe }}
