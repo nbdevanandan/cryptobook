@@ -36,6 +36,19 @@ dark_theme = "github-dark"
 `remark` / `notation` (+ unnumbered `proof`), `details`, `math`, `figure`,
 graph macros. See downstream docs for contracts.
 
+## Behavior notes
+
+- **Callout custom titles** (Obsidian syntax in rendered markdown):
+  `> [!tip|My Title]` (pipe) and `> [!warning] Space Title` (space form)
+  render the custom text inside the callout-title span after the type
+  keyword; unknown types (`[!note]`) degrade to plain blockquotes.
+- **Graph touch isolation**: pan/zoom gestures starting on the graph
+  canvas never trigger the content-area swipe handlers.
+- **TOC vs menu toggles**: topbar uses two distinct icons (truncated-lines
+  icon for the TOC rail, full hamburger for the chapter menu).
+- **SPA navigation**: internal links navigate same-document where
+  possible; pop/back restores each page's exit scroll position.
+
 ## License
 
 MIT (see `theme.toml`; LICENSE file to follow if distributing).
