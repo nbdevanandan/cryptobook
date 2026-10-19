@@ -6,14 +6,15 @@
 }
 @view-transition { navigation: auto; }
 html.no-trans *, html.no-trans *::before, html.no-trans *::after { transition: none !important; }
-html { -webkit-text-size-adjust: 100%; color-scheme: light; touch-action: manipulation; scroll-padding-top: var(--anchor-offset); accent-color: var(--accent); }
+html { -webkit-text-size-adjust: 100%; color-scheme: light; touch-action: manipulation; scroll-padding-top: var(--anchor-offset); accent-color: var(--accent); font-size: 101.6%; }
 html[data-theme="dark"] { color-scheme: dark; }
 body { overflow-x: clip; }
 a, button { -webkit-tap-highlight-color: transparent; }
 .menu__chapters, .toc-sidebar, .search-results, .table-scroll, .lightbox__frame { overscroll-behavior: contain; }
 /* desktop reads at ~125% (matches a manual 25% browser zoom: everything is
-   rem-based, so layout scales along; mobile keeps the 100% base) */
-@media (min-width: 761px) { html { font-size: 125%; } }
+   rem-based, so layout scales along; mobile keeps the 100% base).
+   The calc keeps the base-size nudge (101.6%) in effect on both tiers. */
+@media (min-width: 761px) { html { font-size: calc(101.6% * 1.25); } }
 body {
   margin: 0;
   background: var(--bg);
@@ -199,7 +200,7 @@ html:not([data-theme="dark"]) .icon-moon { display: none; }
 html[data-theme="dark"] .icon-sun { display: none; }
 
 .page__content { padding: 4.5rem 1.5rem 4rem; }
-.book-content { max-width: var(--maxw); margin: 0 auto; hyphens: auto; }
+.book-content { max-width: var(--maxw); margin: 0 auto; hyphens: auto; font-size: 1.02em; }
 /* Wide-column breakouts from the narrow reading column (capped below
    full-bleed so side gutters remain): graph page (canvas + All notes) at
    72rem; chapters index (.chapters has no TOC rail) and plain chapter
@@ -268,7 +269,7 @@ html[data-theme="dark"] .graph-page h1 { font-weight: 650; }
 }
 .main-content pre {
   background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  padding: 0.8rem 1rem; overflow-x: auto; font-size: 0.95rem; line-height: 1.5;
+  padding: 0.7rem 0.9rem; overflow-x: auto; font-size: 0.95rem; line-height: 1.5;
   position: relative;
 }
 /* code copy button (injected by core.js into .code-wrap so it stays pinned
@@ -302,7 +303,7 @@ html[data-theme="dark"] .main-content :not(pre) > code {
   border-collapse: collapse; margin: 1rem 0;
   display: table; width: max-content; min-width: 100%;
 }
-.main-content th, .main-content td { border: 1px solid var(--border); padding: 0.35rem 0.7rem; }
+.main-content th, .main-content td { border: 1px solid var(--border); padding: 0.3rem 0.6rem; }
 .main-content a { color: var(--accent); }
 /* visual \eqref duplicates (swapped from <a> by core.js so nothing focusable
    hides inside MathJax's aria-hidden output — hence a plain span, which also
