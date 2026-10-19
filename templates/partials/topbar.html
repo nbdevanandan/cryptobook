@@ -22,7 +22,11 @@
      display on every swap (see rebaseChrome). `toc` comes from the
      singleton set in base.html (same value toc.html consumes). #}
   <button id="toggle-toc" class="icon-btn" aria-label="Toggle table of contents" title="Toggle contents ( ] )"{% if not toc %} style="display:none"{% endif %}>
-    {% include "partials/menu_icon.html" %}
+    {# Deliberately NOT the menu hamburger: both buttons sit side by side in
+       the topbar, and identical icons made "which one opens which bar"
+       ambiguous on narrow screens. Outline-style lines read as a contents
+       list. #}
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 4h14M2 9h9M2 14h5"/></svg>
   </button>
   <button id="font-toggle" class="icon-btn" aria-label="Toggle sans-serif body text" aria-pressed="false" title="Toggle sans-serif body ( f )">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><text x="4" y="17" font-size="13" stroke="none" fill="currentColor" font-family="serif" font-style="italic">A</text><text x="13" y="17" font-size="13" stroke="none" fill="currentColor" font-family="sans-serif">a</text></svg>
