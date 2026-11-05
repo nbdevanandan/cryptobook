@@ -59,7 +59,6 @@ html[data-theme="dark"] ::selection { color: var(--bg); }
   border-inline-end: 1px solid var(--border);
   padding: 1rem 1rem; font-size: 1rem;
 }
-.menu-hidden { display: none; }
 html.collapse-mode .menu { display: none; }
 html.collapse-mode .page { margin-inline-start: 0; }
 .menu__brand { font-size: 1.15rem; font-weight: 700; margin-top: 0; margin-bottom: 0.6rem; }
@@ -88,10 +87,12 @@ html[data-theme="dark"] .menu a[aria-current] {
 html[data-theme="dark"] .menu a[aria-current], html[data-theme="dark"] .toc-sidebar li.active > a {
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
 }
-.menu__chapters, .menu__pages { list-style: none; margin: 0; padding-inline-start: 0; }
+.menu__chapters, .menu__pages, .menu__subsections { list-style: none; margin: 0; padding-inline-start: 0; }
 .menu__chapters { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
 .menu__pages { padding-inline-start: 1rem; }
+.menu__subsections { padding-inline-start: 0.65rem; }
 .menu__chapters > li { margin: 0.35rem 0; }
+.menu__subsections > li { margin: 0.3rem 0; }
 /* Chapter row: chevron toggle button + chapter link as siblings on one row.
    (Never a link inside <summary> — axe flags interactive summary
    descendants.) The note list below toggles via `hidden`, announced with
@@ -168,6 +169,8 @@ html.collapse-mode .topbar { inset-inline-start: 0; }
 @media (max-width: 760px) {
   .topbar { inset-inline-start: 0; }
   .menu { z-index: var(--z-overlay); box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.2); }
+  html.no-js .menu { position: static; inset: auto; width: auto; box-shadow: none; }
+  html.no-js #menu-toggle { display: none; }
   .page { margin-inline-start: 0; }
 }
 html.topbar-hidden .topbar, html.topbar-force-hidden .topbar { transform: translateY(-100%); }
@@ -400,7 +403,7 @@ html[data-theme="dark"] .search-results {
 .search-results__header { color: var(--muted); font-size: 0.85rem; }
 .search-results__items { list-style: none; padding: 0; margin: 0.3rem 0 0; }
 .search-results__item { margin: 0; padding: 0.45rem 0.4rem; border-radius: var(--radius-sm); }
-.search-results__item:hover, .search-results__item.selected { background: var(--code-bg); }
+.search-results__item:hover, .search-results__item:focus-within { background: var(--code-bg); }
 .search-results__item a { font-weight: 600; text-decoration: none; color: var(--accent); }
 /* Mobile: the dropdown was bound to the (short) input box; re-anchor it to
    the full topbar. Stays below the base rules so the override wins at equal
@@ -477,6 +480,9 @@ html[data-theme="dark"] .diagram-card { color: var(--fg); }
 .graph-list > summary { cursor: pointer; font-family: var(--font-ui); font-weight: 600; border-radius: var(--radius-sm); }
 .graph-list ul { padding-inline-start: 1.2rem; }
 .section-pages { padding-inline-start: 1.2rem; }
+.main-content .section-tree { margin: 0.4rem 0 0; padding-inline-start: 1.2rem; }
+.main-content .section-tree > li { margin-top: 0.4rem; }
+.main-content .section-tree .section-pages { margin: 0.25rem 0 0.35rem; }
 
 /* chapters index: responsive card grid reusing theme tokens */
 .chapters {

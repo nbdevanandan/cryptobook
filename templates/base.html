@@ -17,7 +17,7 @@
 <!DOCTYPE html>
 {# no-trans suppresses all transitions until core.js removes it on load:
    prevents first-paint theme/flash flicker (body bg/color transitions). #}
-<html lang="en" class="no-trans">
+<html lang="en" class="no-trans no-js">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,26 +52,24 @@
      login/offline) skip DNS+TCP+TLS entirely. Absolute URL on purpose (no rp
      swap for external hosts); crossorigin matches the anonymous font fetch
      so the connection is reusable. #}
-  {# preload the body fonts: same-origin, fetched on every page, consumed immediately.
-     Hrefs deliberately carry NO cachebust query: they must byte-match the
-     @font-face src URLs in _fonts.scss, or Chrome treats them as different
-     resources — the preload goes unused AND the CSS triggers a second fetch
-     (verified duplicate in the network log). book.css/js keep cachebust
-     because their referencing tags carry the same hashed URL. #}
-  <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/stix-two-regular.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
+  {# Apply saved preferences before CSS parses to prevent theme flashes; conditionally
+     preload STIX because it is not used when the reader selected sans. #}
+  <script>(function(){var d=document.documentElement,font="serif";d.classList.remove("no-js");d.classList.add("js");try{if(window.matchMedia&&window.matchMedia("(max-width: 760px)").matches)d.classList.add("collapse-mode")}catch(e){}try{var t=localStorage.getItem("theme"),dark=t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches);if(dark)d.setAttribute("data-theme","dark");font=localStorage.getItem("font")||"serif";if(font==="sans")d.setAttribute("data-font","sans");if(localStorage.getItem("collapse-sidebar")==="true")d.classList.add("collapse-mode");if(localStorage.getItem("collapse-toc")==="true")d.classList.add("toc-collapsed")}catch(e){}if(font!=="sans"){var l=document.createElement("link");l.rel="preload";l.as="font";l.type="font/woff2";l.crossOrigin="anonymous";l.href="{{ <kb.rel url={get_url(path='fonts/stix-two-regular.woff2')} base={config.base_url} rp={rp} /> }}";document.head.appendChild(l)}})();</script>
+  {# Preload body/UI fonts from the same origin. Hrefs deliberately carry NO
+     cachebust query: they must byte-match the @font-face src URLs in _fonts.scss,
+     or Chrome treats them as different resources and double-fetches them. #}
   <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/source-sans-3-regular.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/source-sans-3-bold.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ <kb.rel url={get_url(path='book.css', cachebust=true)} base={config.base_url} rp={rp} /> }}">
   {# Print rules ship separately with media="print": lowest fetch priority,
      never render-blocking. Link order matters — print.css stays after
      book.css so it wins same-specificity ties at print time. #}
-  <link rel="stylesheet" href="{{ <kb.rel url={get_url(path='print.css', cachebust=true)} base={config.base_url} rp={rp} /> }}" media="print">
-  <script>(function(){try{var t=localStorage.getItem("theme");var dark=t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches);if(dark)document.documentElement.setAttribute("data-theme","dark");if(localStorage.getItem("font")==="sans")document.documentElement.setAttribute("data-font","sans");if(localStorage.getItem("collapse-sidebar")==="true")document.documentElement.classList.add("collapse-mode");if(localStorage.getItem("collapse-toc")==="true")document.documentElement.classList.add("toc-collapsed");}catch(e){}})();</script>
+  {% block print_css %}<link rel="stylesheet" href="{{ <kb.rel url={get_url(path='print.css', cachebust=true)} base={config.base_url} rp={rp} /> }}" media="print">{% endblock print_css %}
   {% block math_head %}{% include "partials/math_head.html" %}{% endblock math_head %}
-  {# Site-wide hover pre-warming for same-origin navigations (Chromium);
+  {# Intent-based pre-warming for same-origin navigations (Chromium);
      /api/* never renders a page and /graph/* pays heavy canvas init, so both
-     are excluded. Sibling-list prerendering lives in page.html. #}
-  <script type="speculationrules">{"prerender":[{ "source": "document", "where": { "and": [{ "href_matches": "/*" }, { "not": { "href_matches": "/api/*" } }, { "not": { "href_matches": "/graph/*" } }] }, "eagerness": "moderate" }]}</script>
+     are excluded. Avoid eager sibling prefetches; only warm a page on intent. #}
+  {% block speculation_rules %}<script type="speculationrules">{"prerender":[{ "source": "document", "where": { "and": [{ "href_matches": "/*" }, { "not": { "href_matches": "/api/*" } }, { "not": { "href_matches": "/graph/*" } }] }, "eagerness": "moderate" }]}</script>{% endblock speculation_rules %}
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -87,12 +85,12 @@
   </div>
 </div>
 {% block tocside %}{% include "partials/toc.html" %}{% endblock tocside %}
-{# elasticlunr loads lazily on first search use (see loadIdx in core.js).
+{# elasticlunr loads lazily on first search use (see the search initializer in core.js).
    fetchpriority="low": the bundle is deferred and never on the critical path;
    keep it yielded to fonts/CSS/MathJax the same way the MathJax tag does. #}
-<script defer fetchpriority="low" src="{{ <kb.rel url={get_url(path='js/core.js', cachebust=true)} base={config.base_url} rp={rp} /> }}"></script>
+{% block core_script %}<script defer fetchpriority="low" src="{{ <kb.rel url={get_url(path='js/core.js', cachebust=true)} base={config.base_url} rp={rp} /> }}"></script>{% endblock core_script %}
 {# SW is HTTP-only (browsers have no SW on file://); relative script+scope resolve to the site root from any depth. #}
-<script>try{if("serviceWorker"in navigator){window.addEventListener("load",function(){try{navigator.serviceWorker.register("{{ rp }}sw.js",{scope:"{{ rp }}"}).catch(function(){})}catch(e){}})}}catch(e){}</script>
+{% block service_worker %}<script>try{if("serviceWorker"in navigator){window.addEventListener("load",function(){try{navigator.serviceWorker.register("{{ rp }}sw.js",{scope:"{{ rp }}"}).catch(function(){})}catch(e){}})}}catch(e){}</script>{% endblock service_worker %}
 {% block js_body %}{% endblock js_body %}
 </body>
 </html>

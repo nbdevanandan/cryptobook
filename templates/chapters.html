@@ -13,9 +13,13 @@
     <article class="chapter-card" aria-labelledby="ch-{{ loop.index }}">
       <h2 id="ch-{{ loop.index }}">{{ <kb.page_link url={<kb.rel url={s.permalink} base={config.base_url} rp={rp} />} text={s.title or s.path} /> }}<a class="h-anchor" href="#ch-{{ loop.index }}" aria-label="Permalink to {{ s.title or s.path }}">§</a></h2>
       {% if s.description %}<p>{{ s.description }}</p>{% endif %}
-      <p class="backlink-kind">{{ s.pages | length }} note{% if s.pages | length != 1 %}s{% endif %}</p>
+      <p class="backlink-kind">{{ s.pages | length }} direct note{% if s.pages | length != 1 %}s{% endif %}</p>
       {% if s.pages %}
       {% set pages = s.pages %}{% include "partials/note_list.html" %}
+      {% endif %}
+      {% if s.subsections %}
+      <p class="backlink-kind">Subsections</p>
+      <ul class="section-tree">{{ <kb.section_tree sec={s} base={config.base_url} rp={rp} /> }}</ul>
       {% endif %}
     </article>
     {% endfor %}

@@ -2,7 +2,7 @@
    Callouts: kb.callout(type, title). Theorem envs: kb.theorem/lemma/definition/
    example/remark/notation(name?, label?) + kb.proof(label?) — label="…" adds
    id="…" plus a § permalink (link with <a href="#…">, not markdown). Collapsible:
-   kb.details(summary, label?) renders native <details> (anchor lives in <summary>).
+   kb.details(summary, label?) renders native <details> with a separate copy button.
    Diagram: kb.figure(src, alt, caption?) — alt required. Graph + nav below. #}
 
 {% component kb.callout(type: string = "info", title: string = "") %}
@@ -43,7 +43,7 @@
 {% endcomponent kb.notation %}
 
 {% component kb.details(summary: string = "Details", label: string = "") %}
-<details class="thm-details"{% if label %} id="{{ label }}"{% endif %}><summary><span>{{ summary }}</span>{% if label %}<span class="thm-anchor" data-href="#{{ label }}" aria-hidden="true">§</span>{% endif %}</summary><div class="thm-details__body">{{ body | markdown | safe }}</div></details>
+<div class="thm-details-wrap"><details class="thm-details"{% if label %} id="{{ label }}"{% endif %}><summary><span>{{ summary }}</span></summary><div class="thm-details__body">{{ body | markdown | safe }}</div></details>{% if label %}<button type="button" class="thm-anchor thm-details__anchor" data-href="#{{ label }}" aria-label="Copy link to {{ summary }}">§</button>{% endif %}</div>
 {% endcomponent kb.details %}
 
 {# Math shield (uniform rule: ALL math goes through kb.math — never bare $).
@@ -94,12 +94,23 @@
 {% set open = cur is starting_with(pat=s.path) %}
 {% set nid = "menu-notes-" ~ (s.path | replace(from="/", to="-") | replace(from=".", to="-") | lower) %}
 <li class="menu__chapter{% if open %} menu__chapter--active{% endif %}">
-<div class="menu__row"><button type="button" class="menu__chev" aria-expanded="{{ open }}" aria-controls="{{ nid }}" aria-label="Toggle {{ s.title or s.path }} notes"><span aria-hidden="true" class="menu__chev-glyph"></span></button>{{ <kb.page_link url={<kb.rel url={s.permalink} base={base} rp={rp} />} text={s.title or s.path} cur={open} /> }}</div>
-{% if s.pages %}<ol class="menu__pages" id="{{ nid }}"{% if not open %} hidden{% endif %}>{% for p in s.pages %}<li>{{ <kb.page_link url={<kb.rel url={p.permalink} base={base} rp={rp} />} text={p.title or p.slug} cur={cur == p.path} /> }}</li>{% endfor %}</ol>{% endif %}
-{{ <kb.nav sec={s} cur={cur} base={base} rp={rp} /> }}
+<div class="menu__row">{% if s.pages or s.subsections %}<button type="button" class="menu__chev" aria-expanded="{{ open }}" aria-controls="{{ nid }}" aria-label="Toggle {{ s.title or s.path }} contents"><span aria-hidden="true" class="menu__chev-glyph"></span></button>{% endif %}{{ <kb.page_link url={<kb.rel url={s.permalink} base={base} rp={rp} />} text={s.title or s.path} cur={open} /> }}</div>
+{% if s.pages or s.subsections %}<div class="menu__children" id="{{ nid }}"{% if not open %} hidden{% endif %}>{% if s.pages %}<ol class="menu__pages">{% for p in s.pages %}<li>{{ <kb.page_link url={<kb.rel url={p.permalink} base={base} rp={rp} />} text={p.title or p.slug} cur={cur == p.path} /> }}</li>{% endfor %}</ol>{% endif %}{% if s.subsections %}<ol class="menu__subsections">{{ <kb.nav sec={s} cur={cur} base={base} rp={rp} /> }}</ol>{% endif %}</div>{% endif %}
 </li>
 {% endfor %}
 {% endcomponent kb.nav %}
+
+{# Recursive, valid section/note tree shared by the chapter index and graph
+   list so deeper content remains reachable in both views. #}
+{% component kb.section_tree(sec, base, rp) %}
+{% for sp in sec.subsections %}
+{% set s = get_section(path=sp) %}
+<li>{{ <kb.page_link url={<kb.rel url={s.permalink} base={base} rp={rp} />} text={s.title or s.path} /> }} <span class="backlink-kind">chapter</span>
+{% if s.pages %}<ul class="section-pages">{% for p in s.pages %}<li>{{ <kb.page_link url={<kb.rel url={p.permalink} base={base} rp={rp} />} text={p.title or p.slug} /> }}</li>{% endfor %}</ul>{% endif %}
+{% if s.subsections %}<ul class="section-tree">{{ <kb.section_tree sec={s} base={base} rp={rp} /> }}</ul>{% endif %}
+</li>
+{% endfor %}
+{% endcomponent kb.section_tree %}
 
 {# Graph nodes (JSON), recursive. Titles are </script>-escaped (<\/ is a valid
    JSON escape) so a title can never break out of the graph-data block.

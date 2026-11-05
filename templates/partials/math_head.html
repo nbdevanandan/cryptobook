@@ -14,11 +14,9 @@
 {# Preload the tiny always-used NewCM faces (zero/brk/lo, ~12KB total) so the
    vertical-metrics swap that shifts math paragraphs never happens late.
    Absolute CDN URLs on purpose; crossorigin + byte-exact hrefs. The hrefs
-   MUST match whoever consumes them or Chrome double-fetches: the SSR branch
-   below uses the unversioned path (byte-matches @font-face src in the shared
-   math-chtml.css), while the bundle branch uses the @4.1.3-versioned path
-   (byte-matches the bundle's own fontURL — the unversioned preloads were
-   fetched AND discarded there). The 94KB mjx-ncm-n.woff2 is preloaded ONLY
+   MUST match whoever consumes them or Chrome double-fetches: both branches
+   use the @4.1.3-versioned path, matching their fontURL. The 94KB
+   mjx-ncm-n.woff2 is preloaded ONLY
    on the bundle branch (fetchpriority low so it never contends LCP text):
    prod covers its horizontal mismatch with size-adjust + optional instead,
    but the bundle injects neither, so dev CLS (measured 0.23-0.27 on math
@@ -27,9 +25,9 @@
 {% if ex.math | default(value=config.extra.mathjax) %}
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 {% if get_env(name="SSR", default="") == "true" %}
-<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font/chtml/woff2/mjx-ncm-zero.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font/chtml/woff2/mjx-ncm-brk.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font/chtml/woff2/mjx-ncm-lo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-zero.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-brk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-lo.woff2" as="font" type="font/woff2" crossorigin>
 {% else %}
 <link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-zero.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="https://cdn.jsdelivr.net/npm/@mathjax/mathjax-newcm-font@4.1.3/chtml/woff2/mjx-ncm-brk.woff2" as="font" type="font/woff2" crossorigin>
@@ -46,12 +44,9 @@
    scripting plus ~190KB (speech-worker + mathmaps) while post-startup
    `loader.load` resolves yet attaches zero MathML even with a re-typeset,
    so it can never be facade-deferred either — and dev needs neither form.
-   Onboard output stays screen-reader usable: every formula carries
-   role="math" + aria-label (speech text) + data-semantic-* enrichment and
-   real glyph text, which is exactly the a11y story prod SSR ships (prod
-   strips data-mathml and serves no explorer). Dev/prod parity, zero
-   MathML in both, ~0.10 lab points recovered. Revisit only with an
-   upstream lightweight speech path. #}
+   Production SSR emits role="math" + aria-label per formula and strips the
+   larger semantic tree after generating speech labels at build time. Dev
+   keeps MathJax's full semantic enrichment. #}
 <script>MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']],processEscapes:true,processEnvironments:true,tags:'ams'},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
 <script defer fetchpriority="low" src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-chtml.js"></script>
 {% endif %}

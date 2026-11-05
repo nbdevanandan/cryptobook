@@ -1,5 +1,5 @@
 <header class="topbar">
-  <button id="menu-toggle" class="icon-btn" aria-label="Toggle navigation" aria-expanded="true" title="Toggle navigation ( [ )">
+  <button id="menu-toggle" class="icon-btn" aria-label="Toggle navigation" aria-controls="menu" aria-expanded="true" title="Toggle navigation ( [ )">
     {% include "partials/menu_icon.html" %}
   </button>
   {# Brand always resolves to the site root index via the document-relative prefix. #}
@@ -8,10 +8,10 @@
   {# Native search landmark (role kept as fallback for pre-2023 AT). #}
   <search class="search-container" role="search">
     <label class="sr-only" for="search">Search notes</label>
-    <input id="search" name="q" type="search" placeholder="Search…" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="search-listbox" data-index="{{ <kb.rel url={get_url(path='search_index.en.json')} base={config.base_url} rp={rp} /> }}" data-elastic="{{ <kb.rel url={get_url(path='elasticlunr.min.js')} base={config.base_url} rp={rp} /> }}">
+    <input id="search" name="q" type="search" placeholder="Search…" autocomplete="off" spellcheck="false" aria-describedby="search-status" data-index="{{ <kb.rel url={get_url(path='search_index.en.json')} base={config.base_url} rp={rp} /> }}" data-elastic="{{ <kb.rel url={get_url(path='elasticlunr.min.js', cachebust=true)} base={config.base_url} rp={rp} /> }}">
     <div class="search-results" style="display:none">
-      <div class="search-results__header" role="status" aria-live="polite"></div>
-      <ul class="search-results__items" id="search-listbox" role="listbox" aria-label="Search results"></ul>
+      <div class="search-results__header" id="search-status" role="status" aria-live="polite"></div>
+      <ul class="search-results__items" id="search-results-list"></ul>
     </div>
   </search>
   {% endif %}
@@ -21,7 +21,7 @@
      to a TOC page. Hidden inline when this page has no TOC; the router flips
      display on every swap (see rebaseChrome). `toc` comes from the
      singleton set in base.html (same value toc.html consumes). #}
-  <button id="toggle-toc" class="icon-btn" aria-label="Toggle table of contents" title="Toggle contents ( ] )"{% if not toc %} style="display:none"{% endif %}>
+  <button id="toggle-toc" class="icon-btn" aria-label="Toggle table of contents" aria-expanded="{% if toc %}true{% else %}false{% endif %}"{% if toc %} aria-controls="toc-sidebar"{% else %} style="display:none"{% endif %} title="Toggle contents ( ] )">
     {# Deliberately NOT the menu hamburger: both buttons sit side by side in
        the topbar, and identical icons made "which one opens which bar"
        ambiguous on narrow screens. Outline-style lines read as a contents
