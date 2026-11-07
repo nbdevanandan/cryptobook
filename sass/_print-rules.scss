@@ -11,7 +11,9 @@
   html, html[data-theme="dark"] {
     --bg: #fff; --fg: #161616; --muted: #3d3d3d;
     --accent: #0b4fa8; --visited: #4d0f85;
-    --border: #8a8a8a; --code-bg: #f2f2f2; --sidebar-bg: #fff;
+    --border: #8a8a8a; --border-strong: #555; --border-control: #555;
+    --active-bg: #fff; --code-bg: #f2f2f2; --sidebar-bg: #fff;
+    --code-inline-dark: #f2f2f2; --search-bg-dark: #fff;
     /* every tinted surface prints plain paper (keep this list in sync when
        adding background tokens — a missed one prints tinted) */
     @each $t in info, important, tip, warning, example {
@@ -31,6 +33,7 @@
   .search-results, .code-copy, .lightbox, .pager, #graph-canvas { display: none !important; }
   .page { margin: 0; }
   .page__content { padding: 0; }
+  .page__content::after { display: none !important; }
   .main-content { max-width: none; }
   /* Unify print measure WIDER than the screen reading column: at 68ch the
      centered column leaves ~120pt gutters each side, which read as wide
@@ -43,8 +46,9 @@
   /* Notes print at the same wider measure (their screen 68ch column would
      otherwise leave the same wide gutters). */
   .book-content { max-width: min(90ch, 100%); }
-  .main-content a { color: inherit; text-decoration: none; }
+  .main-content a { color: inherit; text-decoration: underline; text-underline-offset: 0.12em; }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; color: var(--muted); }
+  .h-anchor, .thm-anchor { display: none !important; }
   /* Equation cross-references: the screen span is not a link, so hide it and
      show its real-anchor twin instead — (1) stays a clickable internal link
      in the PDF (same-document # fragments need no URL annotation). */
@@ -92,6 +96,12 @@
     border-radius: 0;
   }
   h1, h2, h3 { break-after: avoid; }
+  /* The screen ramp is too large for paper; pin a compact editorial scale. */
+  .book-content h1, .graph-page h1 { font-size: 20pt; line-height: 1.15; margin: 0 0 0.5rem; }
+  .book-content h2 { font-size: 14pt; line-height: 1.2; margin: 1.6rem 0 0.6rem; }
+  .book-content h3 { font-size: 12pt; line-height: 1.25; margin: 1.2rem 0 0.45rem; }
+  .book-content h4 { font-size: 11pt; line-height: 1.3; margin: 1rem 0 0.35rem; }
+  .main-content p, .main-content ul, .main-content ol { margin-bottom: 0.75rem; }
   /* Screen scroll containers become clippers on paper (nothing scrolls in
      print): let wide math spill instead of truncating, and restore tables to
      wrapping table layout (screen max-content sizing exists only for the

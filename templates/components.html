@@ -43,7 +43,7 @@
 {% endcomponent kb.notation %}
 
 {% component kb.details(summary: string = "Details", label: string = "") %}
-<div class="thm-details-wrap"><details class="thm-details"{% if label %} id="{{ label }}"{% endif %}><summary><span>{{ summary }}</span></summary><div class="thm-details__body">{{ body | markdown | safe }}</div></details>{% if label %}<button type="button" class="thm-anchor thm-details__anchor" data-href="#{{ label }}" aria-label="Copy link to {{ summary }}">§</button>{% endif %}</div>
+<div class="thm-details-wrap"><details class="thm-details"{% if label %} id="{{ label }}"{% endif %}><summary><span>{{ summary }}</span>{% if label %}<span class="thm-anchor thm-details__visual" data-href="#{{ label }}" aria-hidden="true">§</span>{% endif %}</summary><div class="thm-details__body">{{ body | markdown | safe }}</div></details>{% if label %}<button type="button" class="thm-anchor thm-details__anchor" data-href="#{{ label }}" aria-label="Copy link to {{ summary }}">§</button>{% endif %}</div>
 {% endcomponent kb.details %}
 
 {# Math shield (uniform rule: ALL math goes through kb.math — never bare $).

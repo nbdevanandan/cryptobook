@@ -2,12 +2,13 @@
    %card merges the skeleton into one selector list via @extend (a mixin
    would re-emit these declarations at every site). */
 %card {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card), var(--inset-hi);
-  padding: 0.6rem 0.85rem;
-  margin: 1.25rem 0;
-  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  padding: 0.55rem 0.75rem;
+  margin: 1rem 0;
+  line-height: 1.5;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.15s ease;
 }
 @mixin callout($bg, $bd) {
   @extend %card;
@@ -17,7 +18,11 @@
 }
 .callout > p:first-child, .thm > p:first-child { margin-top: 0; }
 .callout > p:last-child, .thm > p:last-child { margin-bottom: 0; }
-.callout-title { font-family: var(--font-ui); font-weight: 700; display: block; margin-bottom: 0.3rem; }
+.callout-title {
+  font-family: var(--font-display); font-weight: 700; display: block;
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
 
 .callout-info { @include callout(var(--callout-info-bg), var(--callout-info-bd)); }
 .callout-info .callout-title { color: var(--callout-info-bd); }
@@ -59,9 +64,13 @@
   font-weight: 400; margin-inline-start: 0.35rem; opacity: 0;
 }
 /* permalinks: hover-reveal on desktop, always visible on touch (no hover),
-   always visible to keyboard focus; details anchors also persist while open */
-.thm:hover .thm-anchor, .thm-details-wrap:hover .thm-anchor,
-.thm-details-wrap:focus-within .thm-anchor,
+   always visible to keyboard focus. Details use a decorative inline § inside
+   <summary> (flows after the text) plus a real copy button outside it for
+   keyboard/AT; only the decorative twin follows the hover/open state. */
+.thm:hover .thm-anchor,
+.thm-details-wrap:hover .thm-details__visual,
+.thm-details-wrap:focus-within .thm-details__visual,
+.thm-details[open] .thm-details__visual,
 .thm-anchor:focus-visible, .thm-anchor:focus { opacity: 1; }
 .thm-anchor:hover, .h-anchor:hover { color: var(--accent); }
 @media (hover: none), (pointer: coarse) {
@@ -84,8 +93,7 @@ h2:target, h3:target, h4:target {
   background: var(--bg);
   border-inline-start: 0.35rem solid var(--accent);
 }
-.thm:hover { transform: translateY(-1px); box-shadow: var(--shadow-raised), var(--inset-hi); }
-.thm-head { font-family: var(--font-ui); font-weight: 700; font-variant: small-caps; letter-spacing: 0.02em; }
+.thm-head { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.02em; }
 .thm-definition { border-inline-start-color: var(--callout-info-bd); }
 .thm-lemma { border-inline-start-color: var(--callout-tip-bd); background: var(--thm-lemma-bg); }
 .thm-remark { border-inline-start-color: var(--thm-remark-bd); background: var(--thm-remark-bg); }
@@ -105,13 +113,24 @@ h2:target, h3:target, h4:target {
 }
 .thm-details > summary {
   font-family: var(--font-ui); font-weight: 700; cursor: pointer;
-  border-radius: var(--radius-sm); padding-inline-end: 2rem;
+  border-radius: var(--radius-sm);
 }
-/* Copy button sits beside the details box and aligns with its summary row. */
+.thm-details__visual { cursor: pointer; }
+/* The real copy button is a sibling of <details> (never nested interactive
+   content). It stays out of the way until keyboard-focused, when it appears
+   at the end of the summary row. Mouse/touch users click the inline § twin. */
 .thm-details-wrap { position: relative; }
 .thm-details-wrap .thm-details__anchor {
-  position: absolute; top: 0.65rem; inset-inline-end: 0.85rem;
+  position: absolute; top: 0.2rem; inset-inline-end: 0.55rem;
+  display: inline-grid; place-items: center;
+  font: inherit; line-height: 1;
+  min-inline-size: 1.5rem; min-block-size: 1.5rem;
   border: 0; background: transparent; padding: 0;
   font-weight: 400; cursor: pointer;
+  opacity: 0; pointer-events: none;
 }
-.thm-details__body > p:last-child { margin-bottom: 0.2rem; }
+.thm-details-wrap .thm-details__anchor:focus-visible,
+.thm-details-wrap .thm-details__anchor:focus {
+  opacity: 1; pointer-events: auto;
+}
+.thm-details__body > p:last-child { margin-bottom: 0; }

@@ -22,8 +22,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#fdfcf9" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#131210" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#fefdfb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231663c7'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='white' font-family='serif' font-style='italic'%3E%E2%88%9E%3C/text%3E%3C/svg%3E">
   {% if page and page.title %}{% set meta_title = page.title ~ " · " ~ config.title %}{% elif section and section.title and section.title != config.title %}{% set meta_title = section.title ~ " · " ~ config.title %}{% else %}{% set meta_title = config.title %}{% endif %}
   {% if page and page.description %}{% set meta_desc = page.description %}{% elif section and section.description %}{% set meta_desc = section.description %}{% else %}{% set meta_desc = config.description %}{% endif %}
@@ -53,11 +53,12 @@
      swap for external hosts); crossorigin matches the anonymous font fetch
      so the connection is reusable. #}
   {# Apply saved preferences before CSS parses to prevent theme flashes; conditionally
-     preload STIX because it is not used when the reader selected sans. #}
-  <script>(function(){var d=document.documentElement,font="serif";d.classList.remove("no-js");d.classList.add("js");try{if(window.matchMedia&&window.matchMedia("(max-width: 760px)").matches)d.classList.add("collapse-mode")}catch(e){}try{var t=localStorage.getItem("theme"),dark=t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches);if(dark)d.setAttribute("data-theme","dark");font=localStorage.getItem("font")||"serif";if(font==="sans")d.setAttribute("data-font","sans");if(localStorage.getItem("collapse-sidebar")==="true")d.classList.add("collapse-mode");if(localStorage.getItem("collapse-toc")==="true")d.classList.add("toc-collapsed")}catch(e){}if(font!=="sans"){var l=document.createElement("link");l.rel="preload";l.as="font";l.type="font/woff2";l.crossOrigin="anonymous";l.href="{{ <kb.rel url={get_url(path='fonts/stix-two-regular.woff2')} base={config.base_url} rp={rp} /> }}";document.head.appendChild(l)}})();</script>
+     preload Crimson Pro because it is not used when the reader selected sans. #}
+  <script>(function(){var d=document.documentElement,font="serif";d.classList.remove("no-js");d.classList.add("js");try{if(window.matchMedia&&window.matchMedia("(max-width: 760px)").matches)d.classList.add("collapse-mode")}catch(e){}try{var t=localStorage.getItem("theme"),dark=t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches);if(dark)d.setAttribute("data-theme","dark");font=localStorage.getItem("font")||"serif";if(font==="sans")d.setAttribute("data-font","sans");if(localStorage.getItem("collapse-sidebar")==="true")d.classList.add("collapse-mode");if(localStorage.getItem("collapse-toc")==="true")d.classList.add("toc-collapsed")}catch(e){}if(font!=="sans"){var l=document.createElement("link");l.rel="preload";l.as="font";l.type="font/woff2";l.crossOrigin="anonymous";l.href="{{ <kb.rel url={get_url(path='fonts/crimson-pro-regular.woff2')} base={config.base_url} rp={rp} /> }}";document.head.appendChild(l)}})();</script>
   {# Preload body/UI fonts from the same origin. Hrefs deliberately carry NO
      cachebust query: they must byte-match the @font-face src URLs in _fonts.scss,
      or Chrome treats them as different resources and double-fetches them. #}
+  <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/lato-bold.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/source-sans-3-regular.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="{{ <kb.rel url={get_url(path='fonts/source-sans-3-bold.woff2')} base={config.base_url} rp={rp} /> }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ <kb.rel url={get_url(path='book.css', cachebust=true)} base={config.base_url} rp={rp} /> }}">
