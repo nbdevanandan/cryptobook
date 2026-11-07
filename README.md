@@ -41,7 +41,10 @@ graph macros. See downstream docs for contracts.
 - **Callout custom titles** (Obsidian syntax in rendered markdown):
   `> [!tip|My Title]` (pipe) and `> [!warning] Space Title` (space form)
   render the custom text inside the callout-title span after the type
-  keyword; unknown types (`[!note]`) degrade to plain blockquotes.
+  keyword; unknown types (`[!note]`) degrade to plain blockquotes. Titles
+  are weight 800 for every type (info/important/tip/warning/example).
+- **Narrow-sidebar swipes**: the menu and TOC follow a horizontal drag
+  before snapping open or closed; the graph canvas keeps its pan gesture.
 - **Graph touch isolation**: pan/zoom gestures starting on the graph
   canvas never trigger the content-area swipe handlers.
 - **TOC vs menu toggles**: topbar uses two distinct icons (truncated-lines

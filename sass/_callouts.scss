@@ -19,7 +19,10 @@
 .callout > p:first-child, .thm > p:first-child { margin-top: 0; }
 .callout > p:last-child, .thm > p:last-child { margin-bottom: 0; }
 .callout-title {
-  font-family: var(--font-display); font-weight: 700; display: block;
+  /* One extra step over the display face's 700: the uppercase keywords are
+     small and sit on tinted fills, so they need a little more color to read
+     as headings. Applies to every type, not only warnings. */
+  font-family: var(--font-display); font-weight: 800; display: block;
   font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
   margin-bottom: 0.2rem;
 }

@@ -24,8 +24,8 @@ body {
   color: var(--fg);
   font-family: var(--font-body-serif);
   font-weight: 400;
-  font-size: 1.16rem;
-  line-height: 1.55;
+  font-size: 1.14rem;
+  line-height: 1.5;
   transition: background-color 0.18s ease, color 0.18s ease;
 }
 /* Sans body option (toggle in topbar, persisted). The measure is rem-based,
@@ -130,21 +130,23 @@ html[data-theme="dark"] .menu__chapter--active > .menu__row {
 html[data-theme="dark"] .menu .menu__row > a[aria-current] { box-shadow: none; text-shadow: none; }
 .menu__brand, .menu__footer { flex-shrink: 0; }
 .menu__footer { margin-top: 0.6rem; border-top: 1px solid var(--border); padding-top: 0.35rem; }
-/* 1.25rem clears the 24px target on every desktop/tablet root (25-26px) while
-   removing the last extra row pitch. Mobile keeps 1.5rem because 16px roots
-   would otherwise drop under WCAG 2.5.8. */
-.menu__footer a { display: flex; align-items: center; min-height: 1.25rem; margin: 0; line-height: 1.25; }
-.menu__logout { display: inline; margin: 0; padding: 0; }
+/* Fixed 24.5px rows: just clears WCAG 2.5.8's 24px target and keeps the
+   footer pitch identical at every root size (no rem drift). */
+.menu__footer a { display: flex; align-items: center; min-height: 24.5px; margin: 0; line-height: 24.5px; }
+.menu__footer svg { flex: 0 0 auto; width: 1em; height: 1em; margin-inline-end: 0.45em; }
+.menu__logout { display: flex; margin: 0; padding: 0; }
 .menu__logout button {
+  display: flex; align-items: center; width: 100%;
   background: none; border: none; padding: 0; margin: 0;
-  min-height: 1.25rem; font: inherit; line-height: 1.25; color: var(--fg); cursor: pointer;
+  min-height: 24.5px; font: inherit; line-height: 24.5px;
+  color: var(--fg); cursor: pointer; text-align: start;
 }
 .menu__logout button:hover { color: var(--accent); }
 /* single-key shortcuts (WCAG 2.1.4) are toggleable here and persisted */
 .menu__toggle {
-  display: flex; align-items: center; min-height: 1.25rem;
+  display: flex; align-items: center; min-height: 24.5px;
   background: none; border: none; padding: 0; margin: 0;
-  font: inherit; line-height: 1.25; color: var(--fg); cursor: pointer; text-align: start;
+  font: inherit; line-height: 24.5px; color: var(--fg); cursor: pointer; text-align: start;
 }
 .menu__toggle:hover { color: var(--accent); }
 .menu__footer a[aria-current] {
@@ -179,11 +181,32 @@ html.collapse-mode .topbar { inset-inline-start: 0; }
      15), so the logo/first-chapter gap the design calls for is invisible.
      Start the menu content below the topbar, then give the brand its own
      breathing room before the first chapter row. */
-  html.js .menu { padding-top: 4rem; }
+  /* The mobile sidebar follows the finger instead of snapping after the
+     swipe. Keeping it displayed and translating it off-canvas lets the same
+     transform transition handle both the button toggle and drag release. */
+  html.js .menu {
+    display: flex;
+    padding-top: 4rem;
+    visibility: hidden;
+    transform: translate3d(-100%, 0, 0);
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      visibility 0s linear 0.28s;
+    will-change: transform;
+  }
+  html.js:not(.collapse-mode) .menu {
+    visibility: visible;
+    transform: translate3d(0, 0, 0);
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      visibility 0s linear 0s;
+  }
+  html.js.menu-dragging .menu { visibility: visible; transition: none; }
   .menu__brand { margin-bottom: 1rem; }
-  .menu__footer a, .menu__logout button, .menu__toggle { min-height: 1.5rem; }
+  .menu__footer a, .menu__logout button, .menu__toggle { min-height: 24.5px; }
   .menu { z-index: var(--z-overlay); box-shadow: 0.5rem 0 1.5rem rgba(0, 0, 0, 0.14); }
-  html.no-js .menu { position: static; inset: auto; width: auto; box-shadow: none; }
+  html.no-js .menu {
+    position: static; inset: auto; width: auto; box-shadow: none;
+    visibility: visible; transform: none; transition: none;
+  }
   html.no-js #menu-toggle { display: none; }
   .page { margin-inline-start: 0; }
 }
@@ -311,7 +334,14 @@ html[data-theme="dark"] .icon-sun { display: none; }
 .code-copy:hover { color: var(--accent); border-color: var(--accent); }
 .code-copy__status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .main-content code { font-size: 0.92em; }
-.main-content :not(pre) > code { background: var(--code-bg); padding: 0.08em 0.22em; border-radius: var(--radius-sm); }
+/* Monospace faces have a much larger x-height than Crimson Pro, so 0.92em
+   read as body-text-plus even though the em box was smaller. Drop inline
+   snippets another step to match the surrounding prose visually; fenced
+   code keeps its own 0.95rem scale. */
+.main-content :not(pre) > code {
+  font-size: 0.86em;
+  background: var(--code-bg); padding: 0.08em 0.22em; border-radius: var(--radius-sm);
+}
 html[data-theme="dark"] .main-content pre {
   box-shadow: var(--inset-hi);
 }
@@ -376,6 +406,22 @@ html.toc-collapsed .page__content { padding-inline-end: 1.5rem; }
 @media (max-width: 1185px) {
   .toc-sidebar { display: none; }
   .toc-sidebar.visible { display: block; background: var(--sidebar-bg); z-index: var(--z-overlay); box-shadow: -0.5rem 0 1.5rem rgba(0, 0, 0, 0.14); }
+  /* Match the mobile sidebar: keep the TOC mounted and slide it in from the
+     right edge instead of popping display:none/block. touchmove in core.js
+     drags it with the finger; this transition handles button and release. */
+  html.js .toc-sidebar {
+    display: block;
+    visibility: hidden;
+    transform: translate3d(100%, 0, 0);
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.28s;
+    will-change: transform;
+  }
+  html.js .toc-sidebar.visible {
+    visibility: visible;
+    transform: translate3d(0, 0, 0);
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0s;
+  }
+  html.js.toc-dragging .toc-sidebar { visibility: visible; transition: none; }
   /* .visible must beat the sticky collapse above, or a collapsed TOC can
      never be reopened on narrow screens (higher-specificity hide wins) */
   html.toc-collapsed .toc-sidebar.visible { display: block; }
